@@ -134,13 +134,13 @@ function ClubSportif3D() {
             >
               CLUB
               <meshPhysicalMaterial
-                color="#0d9488"
-                metalness={0.8}
-                roughness={0.2}
+                color="#000000"
+                metalness={0.6}
+                roughness={0.3}
                 clearcoat={1}
                 clearcoatRoughness={0.2}
-                emissive="#006259"
-                emissiveIntensity={0.4}
+                emissive="#222222"
+                emissiveIntensity={0.2}
               />
             </Text3D>
 
@@ -157,13 +157,13 @@ function ClubSportif3D() {
             >
               SPORTIF
               <meshPhysicalMaterial
-                color="#0d9488"
-                metalness={0.8}
-                roughness={0.2}
+                color="#000000"
+                metalness={0.6}
+                roughness={0.3}
                 clearcoat={1}
                 clearcoatRoughness={0.2}
-                emissive="#006259"
-                emissiveIntensity={0.4}
+                emissive="#222222"
+                emissiveIntensity={0.2}
               />
             </Text3D>
           </group>
@@ -269,7 +269,7 @@ export default function About() {
       ref={sectionRef}
       className={`relative overflow-hidden ${montserrat.variable} ${oswald.variable} ${raleway.variable}`}
       style={{
-        background: "linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #ecfeff 100%)",
+        background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #f0f4f8 100%)",
         padding: "4rem 0",
       }}
     >
@@ -295,7 +295,7 @@ export default function About() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-600 to-emerald-500 text-white px-4 py-2 rounded-full uppercase shadow-lg"
+              className="inline-flex items-center gap-2 bg-teal-700 text-white px-4 py-2 rounded-full uppercase shadow-lg"
             >
               <span className="text-xl">★</span>
               <span className="font-[family-name:var(--font-montserrat)] tracking-wider">About Us</span>
@@ -309,7 +309,7 @@ export default function About() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={isTextInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-3xl md:text-4xl lg:text-5xl font-bold mb-8 text-center md:text-left font-[family-name:var(--font-oswald)] tracking-wide text-teal-800"
+                className="text-3xl md:text-4xl lg:text-5xl font-bold mb-8 text-center md:text-left font-[family-name:var(--font-oswald)] tracking-wide text-black"
               >
                 {aboutText.title}
               </motion.h2>
@@ -332,9 +332,9 @@ export default function About() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={isTextInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
                 transition={{ duration: 0.8, delay: 0.9 }}
-                className="text-xl md:text-2xl mt-8 text-center md:text-left font-[family-name:var(--font-montserrat)] font-semibold"
+                className="text-xl md:text-2xl mt-8 text-center md:text-left font-[family-name:var(--font-montserrat)] font-semibold text-black"
               >
-                <GradientText>{aboutText.highlight}</GradientText>
+                {aboutText.highlight}
               </motion.p>
 
               <motion.div
@@ -374,7 +374,7 @@ export default function About() {
                     transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
                     className="text-center"
                   >
-                    <div className="text-3xl md:text-4xl font-bold text-teal-600 mb-1 font-[family-name:var(--font-oswald)]">
+                    <div className="text-3xl md:text-4xl font-bold text-black mb-1 font-[family-name:var(--font-oswald)]">
                       <AnimatedCounter value={stat.value} />
                       {index === 0 && "+"}
                     </div>
