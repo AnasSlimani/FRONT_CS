@@ -54,7 +54,7 @@ const slides = [
     title: "BIENVENUE AU",
     subtitle: "CLUB SPORTIF",
     buttonText: "JOIN US",
-    buttonLink: "/join-us",
+    buttonLink: "#joinus",
     image: "/images/terrain1.jpg",
   },
   {

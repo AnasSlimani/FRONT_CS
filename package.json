@@ -14,6 +14,9 @@
     "react-dom": "$react-dom"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/joy": "^5.0.0-beta.52",
     "@radix-ui/react-label": "^2.1.2",
     "@react-three/drei": "^10.0.5",
     "@tabler/icons-react": "^3.31.0",

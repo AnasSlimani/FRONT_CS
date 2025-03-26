@@ -116,18 +116,18 @@ export default function Navbar() {
                   <span>Team</span>
                 </Link>
                 <Link
-                  href="#sports"
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
-                >
-                  <Trophy size={16} className="mr-2 text-teal-600" />
-                  <span>Sports</span>
-                </Link>
-                <Link
                   href="#joinus"
                   className="flex items-center px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
                 >
-                  <User size={16} className="mr-2 text-teal-600" />
+                  <Trophy size={16} className="mr-2 text-teal-600" />
                   <span>Join Us</span>
+                </Link>
+                <Link
+                  href="#contact"
+                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
+                >
+                  <User size={16} className="mr-2 text-teal-600" />
+                  <span>Contact</span>
                 </Link>
               </div>
             </div>
