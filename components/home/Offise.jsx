@@ -74,7 +74,7 @@ const Office = () => {
   ]
 
   return (
-    <section
+    <section id="team"
       className={`py-16 ${montserrat.variable} ${oswald.variable}`}
       style={{
         background: "linear-gradient(to bottom, var(--gray-50), var(--gray-100))",

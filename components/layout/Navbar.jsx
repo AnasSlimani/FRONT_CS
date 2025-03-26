@@ -64,16 +64,17 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8 lg:space-x-12">
           <Link
-            href="/"
-            className="text-teal-700 font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group"
+            href="#home"
+            className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
           >
             <Home size={18} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
-            <span>ACCUEIL</span>
+            <span>HOME</span>
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-500 transition-all duration-300 group-hover:w-full"></span>
           </Link>
 
           <div className="relative group">
             <button
-              className="text-teal-700 font-semibold text-sm lg:text-base hover:text-teal-500 flex items-center transition-colors duration-200 group"
+              className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 flex items-center transition-colors duration-200 group"
               onClick={toggleClubDropdown}
               aria-expanded={isClubDropdownOpen}
               aria-haspopup="true"
@@ -94,35 +95,35 @@ export default function Navbar() {
             >
               <div>
                 <Link
-                  href="/about-us"
+                  href="#about"
                   className="flex items-center px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
                 >
                   <Info size={16} className="mr-2 text-teal-600" />
                   <span>About Us</span>
                 </Link>
                 <Link
-                  href="/actualites"
+                  href="#actualities"
                   className="flex items-center px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
                 >
                   <Calendar size={16} className="mr-2 text-teal-600" />
                   <span>Actualités</span>
                 </Link>
                 <Link
-                  href="/bureau"
+                  href="#team"
                   className="flex items-center px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
                 >
                   <Users size={16} className="mr-2 text-teal-600" />
-                  <span>Notre Bureau</span>
+                  <span>Team</span>
                 </Link>
                 <Link
-                  href="/sports"
+                  href="#sports"
                   className="flex items-center px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
                 >
                   <Trophy size={16} className="mr-2 text-teal-600" />
-                  <span>Nos Sports</span>
+                  <span>Sports</span>
                 </Link>
                 <Link
-                  href="/join-us"
+                  href="#joinus"
                   className="flex items-center px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
                 >
                   <User size={16} className="mr-2 text-teal-600" />
@@ -134,7 +135,7 @@ export default function Navbar() {
 
           <Link
             href="/activities"
-            className="text-teal-700 font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
+            className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
           >
             <Trophy size={18} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
             <span>ACTIVITES</span>
@@ -143,7 +144,7 @@ export default function Navbar() {
 
           <Link
             href="/shop"
-            className="text-teal-700 font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
+            className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
           >
             <ShoppingBag size={18} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
             <span>SHOP</span>
@@ -151,8 +152,8 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/contact"
-            className="text-teal-700 font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
+            href="#contact"
+            className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
           >
             <Phone size={18} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
             <span>CONTACT</span>
@@ -168,6 +169,7 @@ export default function Navbar() {
           <span>LOGIN</span>
           <User size={16} className="ml-2" />
         </Link>
+        
 
         {/* Mobile Navigation - Fullscreen overlay */}
         <div
@@ -196,7 +198,7 @@ export default function Navbar() {
               onClick={() => setIsMenuOpen(false)}
             >
               <Home size={20} className="mr-2" />
-              <span>ACCUEIL</span>
+              <span>HOME</span>
             </Link>
 
             <div className="w-full max-w-xs">

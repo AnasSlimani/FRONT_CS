@@ -115,7 +115,7 @@ export default function HeroCarousel() {
   }
 
   return (
-    <div
+    <div id="home "
       className={`relative w-full h-[600px] overflow-hidden ${montserrat.variable} ${oswald.variable} ${raleway.variable} ${poppins.variable} ${robotoCondensed.variable}`}
     >
       {/* Slides */}

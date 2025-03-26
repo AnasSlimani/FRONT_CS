@@ -49,3 +49,8 @@ body {
   min-height: 50vh;
   background-color: #000000;
 }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}

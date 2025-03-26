@@ -6,7 +6,7 @@ export default function Actualities() {
   const cards = data.map((card, index) => <Card key={card.src} card={card} index={index} layout={true} />)
 
   return (
-    <div className="w-full h-full pt-15 pb-10 bg-black">
+    <div id="actualities" className="w-full h-full pt-15 pb-10 bg-black">
       <h2 className="max-w-7xl pl-4 mx-auto text-xl md:text-5xl font-bold text-neutral-800 dark:text-neutral-200 font-sans">
         Get to know Our Actualities !
       </h2>

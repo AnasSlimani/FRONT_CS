@@ -4,7 +4,7 @@ import { Test } from "@/components/home/SignUpForm";
 
 export default function Partnership() {
   return (
-    <div className="min-h-[50rem] w-full rounded-md bg-neutral-950 relative flex flex-col items-center justify-center antialiased py-12">
+    <div id="joinus" className="min-h-[50rem] w-full rounded-md bg-neutral-950 relative flex flex-col items-center justify-center antialiased py-12">
       <div className="container mx-auto z-10 relative px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
           {/* Left column - Text content */}
