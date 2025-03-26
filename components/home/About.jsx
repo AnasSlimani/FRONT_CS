@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber"
 import { OrbitControls, Environment, Text3D, Center, Float } from "@react-three/drei"
 import { Montserrat, Oswald, Raleway } from "next/font/google"
 import Link from "next/link"
+import { BackgroundBeams } from "@/components/ui/background-beams";
 
 // Import fonts
 const montserrat = Montserrat({
@@ -304,6 +305,7 @@ export default function About() {
           </div>
         </motion.div>
       </div>
+      <BackgroundBeams />
     </section>
   )
 }
