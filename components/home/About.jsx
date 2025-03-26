@@ -25,90 +25,6 @@ const raleway = Raleway({
   display: "swap",
 })
 
-// Enhanced Sports Ball component with glow and dynamic materials
-function SportsBall({ position, rotation, scale, type }) {
-  const ballColors = {
-    soccer: { main: "#ffffff", detail: "#000000", emissive: "#003300" },
-    basketball: { main: "#e65100", detail: "#000000", emissive: "#331400" },
-    tennis: { main: "#c9e265", detail: "#ffffff", emissive: "#2c3300" },
-    volleyball: { main: "#ffffff", detail: "#2962ff", emissive: "#000033" },
-  }
-
-  const color = ballColors[type].main
-  const detailColor = ballColors[type].detail
-  const emissiveColor = ballColors[type].emissive
-
-  return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-      <group position={position} rotation={rotation} scale={scale}>
-        <mesh castShadow>
-          <sphereGeometry args={[1, 32, 32]} />
-          <meshStandardMaterial
-            color={color}
-            metalness={0.2}
-            roughness={0.6}
-            emissive={emissiveColor}
-            emissiveIntensity={0.5}
-          />
-
-          {/* Different patterns based on ball type */}
-          {type === "soccer" && (
-            <group>
-              {Array.from({ length: 12 }).map((_, i) => (
-                <mesh key={i}>
-                  <torusGeometry args={[1.001, 0.05, 16, 100, Math.PI * 2 * (i / 12)]} />
-                  <meshStandardMaterial color={detailColor} />
-                </mesh>
-              ))}
-            </group>
-          )}
-
-          {type === "basketball" && (
-            <group>
-              <mesh rotation={[0, 0, 0]}>
-                <torusGeometry args={[1.001, 0.03, 16, 100]} />
-                <meshStandardMaterial color={detailColor} />
-              </mesh>
-              <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[1.001, 0.03, 16, 100]} />
-                <meshStandardMaterial color={detailColor} />
-              </mesh>
-              {Array.from({ length: 8 }).map((_, i) => (
-                <mesh key={i} rotation={[0, Math.PI * (i / 4), Math.PI / 2]}>
-                  <torusGeometry args={[1.001, 0.02, 16, 50, Math.PI]} />
-                  <meshStandardMaterial color={detailColor} />
-                </mesh>
-              ))}
-            </group>
-          )}
-
-          {type === "tennis" && (
-            <group>
-              {Array.from({ length: 2 }).map((_, i) => (
-                <mesh key={i} rotation={[0, 0, (Math.PI / 2) * i]}>
-                  <torusGeometry args={[1.001, 0.02, 16, 100]} />
-                  <meshStandardMaterial color={detailColor} />
-                </mesh>
-              ))}
-            </group>
-          )}
-
-          {type === "volleyball" && (
-            <group>
-              {Array.from({ length: 3 }).map((_, i) => (
-                <mesh key={i} rotation={[0, 0, (Math.PI / 3) * i]}>
-                  <torusGeometry args={[1.001, 0.04, 16, 100, Math.PI]} />
-                  <meshStandardMaterial color={detailColor} />
-                </mesh>
-              ))}
-            </group>
-          )}
-        </mesh>
-      </group>
-    </Float>
-  )
-}
-
 // Enhanced 3D Scene component with better lighting and effects
 function ClubSportif3D() {
   return (
@@ -170,16 +86,6 @@ function ClubSportif3D() {
         </Float>
       </Center>
 
-      {/* Orbiting sports balls with enhanced animation */}
-      <group>
-        <SportsBall position={[4, 0.5, 0]} rotation={[0.5, 0.5, 0]} scale={0.6} type="soccer" />
-        <SportsBall position={[-4, -1, 2]} rotation={[0.2, 0.3, 0.1]} scale={0.5} type="basketball" />
-        <SportsBall position={[3, -2, -1]} rotation={[0.1, 0.7, 0.3]} scale={0.4} type="tennis" />
-        <SportsBall position={[-3, 2, -2]} rotation={[0.4, 0.2, 0.5]} scale={0.5} type="volleyball" />
-        <SportsBall position={[0, 3, 3]} rotation={[0.3, 0.6, 0.2]} scale={0.6} type="soccer" />
-        <SportsBall position={[2, -3, 1]} rotation={[0.7, 0.1, 0.4]} scale={0.4} type="basketball" />
-      </group>
-
       <Environment preset="studio" />
       <OrbitControls
         enableZoom={false}
@@ -229,7 +135,7 @@ function GradientText({ children, className }) {
 const aboutText = {
   title: "Notre Histoire et Notre Mission",
   paragraphs: [
-    "Fondé en 1983, le Club Sportif Jaguars est né de la passion d'un groupe d'amis déterminés à créer un espace où le sport serait accessible à tous.",
+    "JAGUARS Fondé en 1983, le Club Sportif Jaguars est né de la passion d'un groupe d'amis déterminés à créer un espace où le sport serait accessible à tous.",
     "Aujourd'hui, nous sommes fiers d'offrir plus de 12 disciplines sportives, d'accueillir plus de 850 adhérents et de compter sur une équipe de 25 entraîneurs qualifiés.",
     "Notre mission est de promouvoir l'excellence sportive, l'esprit d'équipe et le développement personnel à travers la pratique du sport dans un environnement inclusif et stimulant.",
   ],

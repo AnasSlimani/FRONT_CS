@@ -61,7 +61,7 @@ const slides = [
     id: 2,
     title: "NOTRE CLUB EN",
     subtitle: "CHIFFRES",
-    mainTitle: "CLUB OMNISPORTS",
+    mainTitle: "CLUB JAGUARS",
     stats: [
       { icon: <Trophy className="text-teal-400" size={32} />, text: "12 Sections sportives" },
       { icon: <Users className="text-teal-400" size={32} />, text: "850+ Adhérents actifs" },

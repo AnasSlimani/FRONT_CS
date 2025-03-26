@@ -14,10 +14,11 @@
     "react-dom": "$react-dom"
   },
   "dependencies": {
+    "@radix-ui/react-label": "^2.1.2",
     "@react-three/drei": "^10.0.5",
     "@tabler/icons-react": "^3.31.0",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.5.0",
+    "framer-motion": "^12.6.0",
     "lucide-react": "^0.483.0",
     "motion": "^12.6.0",
     "next": "15.2.3",
