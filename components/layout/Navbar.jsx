@@ -1,36 +1,67 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import Image from "next/image"
-import { useState, useEffect } from "react"
-import { Menu, X, ChevronDown, User, Home, Info, Calendar, ShoppingBag, Trophy, Users, Phone } from "lucide-react"
+import Link from "next/link";
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  User,
+  Home,
+  Info,
+  Calendar,
+  ShoppingBag,
+  Trophy,
+  Users,
+  Phone,
+} from "lucide-react";
+import api from "@/app/api/axios";
 
 export default function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isClubDropdownOpen, setIsClubDropdownOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isClubDropdownOpen, setIsClubDropdownOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [token, setToken] = useState(null);
 
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
-        setScrolled(true)
+        setScrolled(true);
       } else {
-        setScrolled(false)
+        setScrolled(false);
       }
-    }
+    };
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    setToken(localStorage.getItem("token"));
+  }, [token]);
 
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen)
-  }
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   const toggleClubDropdown = () => {
-    setIsClubDropdownOpen(!isClubDropdownOpen)
-  }
+    setIsClubDropdownOpen(!isClubDropdownOpen);
+  };
+
+  const logout = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post("/users/logout");
+      if ((response.status = "200")) {
+        localStorage.removeItem("token");
+        window.location.reload();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <nav
@@ -67,7 +98,10 @@ export default function Navbar() {
             href="#home"
             className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
           >
-            <Home size={18} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
+            <Home
+              size={18}
+              className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200"
+            />
             <span>HOME</span>
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-500 transition-all duration-300 group-hover:w-full"></span>
           </Link>
@@ -79,18 +113,25 @@ export default function Navbar() {
               aria-expanded={isClubDropdownOpen}
               aria-haspopup="true"
             >
-              <Info size={18} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
+              <Info
+                size={18}
+                className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200"
+              />
               <span>CLUB</span>
               <ChevronDown
                 size={16}
-                className={`ml-1 transition-transform duration-200 ${isClubDropdownOpen ? "rotate-180" : ""}`}
+                className={`ml-1 transition-transform duration-200 ${
+                  isClubDropdownOpen ? "rotate-180" : ""
+                }`}
               />
             </button>
 
             {/* Dropdown menu with animation */}
             <div
               className={`absolute left-0 mt-1 w-56 bg-white rounded-lg shadow-xl overflow-hidden transition-all duration-300 ease-in-out transform origin-top ${
-                isClubDropdownOpen ? "opacity-100 visible scale-100" : "opacity-0 invisible scale-95"
+                isClubDropdownOpen
+                  ? "opacity-100 visible scale-100"
+                  : "opacity-0 invisible scale-95"
               }`}
             >
               <div>
@@ -137,7 +178,10 @@ export default function Navbar() {
             href="/activities"
             className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
           >
-            <Trophy size={18} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
+            <Trophy
+              size={18}
+              className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200"
+            />
             <span>ACTIVITES</span>
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-500 transition-all duration-300 group-hover:w-full"></span>
           </Link>
@@ -146,7 +190,10 @@ export default function Navbar() {
             href="/shop"
             className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
           >
-            <ShoppingBag size={18} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
+            <ShoppingBag
+              size={18}
+              className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200"
+            />
             <span>SHOP</span>
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-500 transition-all duration-300 group-hover:w-full"></span>
           </Link>
@@ -155,26 +202,49 @@ export default function Navbar() {
             href="#contact"
             className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
           >
-            <Phone size={18} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
+            <Phone
+              size={18}
+              className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200"
+            />
             <span>CONTACT</span>
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-500 transition-all duration-300 group-hover:w-full"></span>
           </Link>
         </div>
 
         {/* Login Button */}
-        <Link
-          href="/auth"
-          className="hidden md:flex items-center bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-5 rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm lg:text-base"
-        >
-          <span>LOGIN</span>
-          <User size={16} className="ml-2" />
-        </Link>
-        
+        {token ? (
+          <>
+            <button
+              onClick={logout}
+              className="hidden md:flex items-center bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-5 rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm lg:text-base"
+            >
+              <span>Log Out</span>
+              <User size={16} className="ml-2" />
+            </button>
+            <Link
+              href="/profile"
+              className="hidden md:flex items-center bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-5 rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm lg:text-base"
+            >
+              <span>My profile</span>
+              <User size={16} className="ml-2" />
+            </Link>
+          </>
+        ) : (
+          <Link
+            href="/login"
+            className="hidden md:flex items-center bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-5 rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm lg:text-base"
+          >
+            <span>LOGIN</span>
+            <User size={16} className="ml-2" />
+          </Link>
+        )}
 
         {/* Mobile Navigation - Fullscreen overlay */}
         <div
           className={`fixed inset-0 bg-teal-700/95 backdrop-blur-sm z-50 md:hidden transition-all duration-500 ease-in-out ${
-            isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+            isMenuOpen
+              ? "opacity-100 visible"
+              : "opacity-0 invisible pointer-events-none"
           }`}
         >
           <div className="flex justify-end p-4">
@@ -188,8 +258,18 @@ export default function Navbar() {
           </div>
 
           <div className="flex flex-col items-center justify-center h-[80vh] space-y-6 p-4">
-            <Link href="/" className="mb-6" onClick={() => setIsMenuOpen(false)}>
-              <Image src="/images/logo.jpg" alt="Club Sportif Logo" width={100} height={75} className="h-auto" />
+            <Link
+              href="/"
+              className="mb-6"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Image
+                src="/images/logo.jpg"
+                alt="Club Sportif Logo"
+                width={100}
+                height={75}
+                className="h-auto"
+              />
             </Link>
 
             <Link
@@ -212,13 +292,17 @@ export default function Navbar() {
                 <span>CLUB</span>
                 <ChevronDown
                   size={20}
-                  className={`ml-2 transition-transform duration-200 ${isClubDropdownOpen ? "rotate-180" : ""}`}
+                  className={`ml-2 transition-transform duration-200 ${
+                    isClubDropdownOpen ? "rotate-180" : ""
+                  }`}
                 />
               </button>
 
               <div
                 className={`space-y-3 mt-3 overflow-hidden transition-all duration-300 ${
-                  isClubDropdownOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                  isClubDropdownOpen
+                    ? "max-h-96 opacity-100"
+                    : "max-h-0 opacity-0"
                 }`}
               >
                 <Link
@@ -306,6 +390,5 @@ export default function Navbar() {
       {/* Colored bar under navbar */}
       <div className="h-1 w-full bg-gradient-to-r from-teal-400 via-teal-600 to-teal-400"></div>
     </nav>
-  )
+  );
 }
-
