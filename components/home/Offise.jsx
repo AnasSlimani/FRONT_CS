@@ -83,7 +83,7 @@ const Office = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2
-            className="text-7xl md:text-6xl lg:text-8xl font-bold mb-8 text-center font-[family-name:var(--font-oswald)] tracking-wide text-black"
+            className="text-6xl md:text-6xl lg:text-8xl font-bold mb-8 text-center font-[family-name:var(--font-oswald)] tracking-wide text-black"
           >
             Our Team
           </h2>

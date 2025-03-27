@@ -215,7 +215,7 @@ export default function About() {
               viewport={{ once: true }}
             >
               <Link
-                href="/join-us"
+                href="#joinus"
                 className="group inline-flex items-center gap-2 bg-black hover:bg-white hover:text-black text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-xl"
               >
                 <span>Rejoignez-nous</span>

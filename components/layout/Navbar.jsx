@@ -64,7 +64,7 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8 lg:space-x-12">
           <Link
-            href="#home"
+            href="/"
             className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
           >
             <Home size={18} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
@@ -116,18 +116,18 @@ export default function Navbar() {
                   <span>Team</span>
                 </Link>
                 <Link
-                  href="#sports"
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
-                >
-                  <Trophy size={16} className="mr-2 text-teal-600" />
-                  <span>Sports</span>
-                </Link>
-                <Link
                   href="#joinus"
                   className="flex items-center px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
                 >
-                  <User size={16} className="mr-2 text-teal-600" />
+                  <Trophy size={16} className="mr-2 text-teal-600" />
                   <span>Join Us</span>
+                </Link>
+                <Link
+                  href="#contact"
+                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
+                >
+                  <User size={16} className="mr-2 text-teal-600" />
+                  <span>Contact</span>
                 </Link>
               </div>
             </div>
