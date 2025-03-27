@@ -64,7 +64,7 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8 lg:space-x-12">
           <Link
-            href="#home"
+            href="/"
             className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative"
           >
             <Home size={18} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
