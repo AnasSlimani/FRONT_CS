@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import ShopSidebar from "./ShopSidebar"
 import ShopContent from "./ShopContent"
-import { Montserrat, Oswald } from "next/font/google"
-import { Menu, X } from "lucide-react"
+import { Montserrat, Oswald } from 'next/font/google'
+import { Menu, X } from 'lucide-react'
 import { motion, AnimatePresence } from "framer-motion"
 
 // Load fonts
@@ -27,6 +27,9 @@ const Shop = () => {
     colors: [],
     sizes: [],
   })
+
+  // State for filtered products
+  const [filteredProducts, setFilteredProducts] = useState([])
 
   // State for mobile sidebar visibility
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -119,17 +122,23 @@ const Shop = () => {
               exit={{ x: -320, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              <ShopSidebar filters={filters} onFilterChange={handleFilterChange}  />
+              <ShopSidebar 
+                filters={filters} 
+                onFilterChange={handleFilterChange} 
+                setFilteredProducts={setFilteredProducts}
+              />
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Content area - always visible */}
-        <ShopContent  />
+        <ShopContent 
+          filteredProducts={filteredProducts} 
+          setFilteredProducts={setFilteredProducts} 
+        />
       </div>
     </div>
   )
 }
 
 export default Shop
-

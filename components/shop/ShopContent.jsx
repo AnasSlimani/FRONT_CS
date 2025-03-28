@@ -2,8 +2,33 @@
 
 import { motion } from "framer-motion"
 import ProductCard from "./ProductCard"
+import { useEffect, useState } from "react"
+import api from "@/app/api/axios"
 
-const ShopContent = () => {
+const ShopContent = ({ filteredProducts, setFilteredProducts }) => {
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      if (filteredProducts && filteredProducts.length > 0) {
+        setLoading(false)
+        return
+      }
+      
+      try {
+        setLoading(true)
+        const response = await api.get("/products", { public: true })
+        setFilteredProducts(response.data)
+      } catch (error) {
+        console.log(error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [])
+
   return (
     <div className="flex-1 bg-gray-100 overflow-y-auto">
       <div className="px-8 pt-5 py-10 max-w-7xl mx-auto">
@@ -26,18 +51,25 @@ const ShopContent = () => {
             </div>
           </div>
 
-          {/* Product grid with proper spacing */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-15">
-            <ProductCard />
-            <ProductCard />
-            <ProductCard />
-            <ProductCard />
-            <ProductCard />
-            <ProductCard />
-            <ProductCard />
-            <ProductCard />   
-            <ProductCard />
-          </div>
+          {/* Loading state */}
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+            </div>
+          ) : filteredProducts && filteredProducts.length > 0 ? (
+            /* Product grid with proper spacing */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-15">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            /* No products found */
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-semibold text-gray-700">No products found</h2>
+              <p className="text-gray-500 mt-2">Try adjusting your filters to find what you're looking for.</p>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>
@@ -45,4 +77,3 @@ const ShopContent = () => {
 }
 
 export default ShopContent
-

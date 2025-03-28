@@ -2,21 +2,10 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-  ShirtIcon as Tshirt,
-  Shirt,
-  CircleDot,
-  Ruler,
-  ChevronDown,
-  ChevronUp,
-  Palette,
-  ShoppingBag,
-  Tag,
-  GraduationCapIcon as Cap,
-  ScissorsIcon as Scarf,
-} from "lucide-react"
+import { ShirtIcon as Tshirt, Shirt, CircleDot, Ruler, ChevronDown, ChevronUp, Palette, ShoppingBag, Tag, GraduationCapIcon as Cap, ScissorsIcon as Scarf } from 'lucide-react'
+import api from "@/app/api/axios"
 
-const ShopSidebar = ({ filters, onFilterChange ,handleApply }) => {
+const ShopSidebar = ({ filters, onFilterChange, setFilteredProducts }) => {
   // Available categories with their icons
   const categories = [
     { id: "polos", label: "Polos", icon: <Shirt className="w-5 h-5" />, filters: ["colors", "size"] },
@@ -49,6 +38,9 @@ const ShopSidebar = ({ filters, onFilterChange ,handleApply }) => {
     size: true,
   })
 
+  // State for loading
+  const [isLoading, setIsLoading] = useState(false)
+
   // Toggle section expansion
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({
@@ -70,6 +62,46 @@ const ShopSidebar = ({ filters, onFilterChange ,handleApply }) => {
     })
 
     return requiredFilters.has(filterType)
+  }
+
+  const applyFilter = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    console.log(filters);
+    
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      
+      if (filters.categories.length > 0) {
+        filters.categories.forEach(category => {
+          params.append('categories', category);
+        });
+      }
+      
+      if (filters.colors.length > 0) {
+        filters.colors.forEach(color => {
+          params.append('colors', color);
+        });
+      }
+      
+      if (filters.sizes.length > 0) {
+        filters.sizes.forEach(size => {
+          params.append('sizes', size);
+        });
+      }
+      
+      // If no filters are selected, get all products
+      const endpoint = params.toString() ? `/products/filter?${params.toString()}` : '/products';
+      
+      const response = await api.get(endpoint, { public: true });
+      setFilteredProducts(response.data);
+      console.log("Filtered products:", response.data);
+    } catch (error) {
+      console.error("Error applying filters:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -262,11 +294,13 @@ const ShopSidebar = ({ filters, onFilterChange ,handleApply }) => {
 
         {/* Apply Filters Button */}
         <motion.button
-          className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-lg transition-colors duration-200"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          className={`w-full py-3 ${isLoading ? 'bg-gray-600' : 'bg-teal-600 hover:bg-teal-700'} text-white font-semibold rounded-lg shadow-lg transition-colors duration-200`}
+          whileHover={{ scale: isLoading ? 1 : 1.02 }}
+          whileTap={{ scale: isLoading ? 1 : 0.98 }}
+          onClick={applyFilter}
+          disabled={isLoading}
         >
-          Apply Filters
+          {isLoading ? 'Applying Filters...' : 'Apply Filters'}
         </motion.button>
       </div>
     </div>
@@ -274,4 +308,3 @@ const ShopSidebar = ({ filters, onFilterChange ,handleApply }) => {
 }
 
 export default ShopSidebar
-
