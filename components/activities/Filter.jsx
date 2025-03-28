@@ -10,7 +10,7 @@ const Filter = ({ activeFilter, setActiveFilter }) => {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 -mt-8 mb-12 relative z-20">
+    <div className="w-full max-w-5xl mx-auto px-4 -mt-8 mb-12 relative z-20">
       <motion.div
         className="bg-[#0e0b30] rounded-full shadow-xl overflow-hidden border border-indigo-900/50"
         initial={{ y: -50, opacity: 0 }}

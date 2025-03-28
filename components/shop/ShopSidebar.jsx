@@ -16,7 +16,7 @@ import {
   ScissorsIcon as Scarf,
 } from "lucide-react"
 
-const ShopSidebar = ({ filters, onFilterChange }) => {
+const ShopSidebar = ({ filters, onFilterChange ,handleApply }) => {
   // Available categories with their icons
   const categories = [
     { id: "polos", label: "Polos", icon: <Shirt className="w-5 h-5" />, filters: ["colors", "size"] },

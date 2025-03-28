@@ -119,13 +119,13 @@ const Shop = () => {
               exit={{ x: -320, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              <ShopSidebar filters={filters} onFilterChange={handleFilterChange} />
+              <ShopSidebar filters={filters} onFilterChange={handleFilterChange}  />
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Content area - always visible */}
-        <ShopContent />
+        <ShopContent  />
       </div>
     </div>
   )

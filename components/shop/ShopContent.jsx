@@ -35,7 +35,7 @@ const ShopContent = () => {
             <ProductCard />
             <ProductCard />
             <ProductCard />
-            <ProductCard />
+            <ProductCard />   
             <ProductCard />
           </div>
         </motion.div>
