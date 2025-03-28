@@ -56,7 +56,7 @@ export default function Navbar() {
       const response = await api.post("/users/logout");
       if ((response.status = "200")) {
         localStorage.removeItem("token");
-        window.location.reload();
+        window.location.href = '/';
       }
     } catch (error) {
       console.log(error);
