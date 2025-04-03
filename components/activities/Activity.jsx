@@ -5,7 +5,9 @@ import Image from "next/image"
 import { Calendar, MapPin, Clock, Users, Trophy, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
-import Modal from "./Modal"
+import TeamCreationModal from "./modals/TeamCreationModal"
+import SimpleConfirmationModal from "./modals/SimpleConfirmationModal"
+import PaymentFormModal from "./modals/PaymentFormModal"
 
 const Activity = ({ activity }) => {
   // Determine icon based on activity type
@@ -34,6 +36,55 @@ const Activity = ({ activity }) => {
       setIsModalOpen(true)
     }
     // If registration is closed, let the link navigate to details page
+  }
+
+  // Determine which modal to show based on activity type and subtype
+  const renderModal = () => {
+    if (!isModalOpen) return null
+
+    if (activity.type === "tournament") {
+      if (activity.subType === "football" || activity.subType === "basketball") {
+        return (
+          <TeamCreationModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            activityTitle={activity.title}
+          />
+        )
+      } else if (activity.subType === "billard") {
+        return (
+          <SimpleConfirmationModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            activityTitle={activity.title}
+            message="Your place is reserved successfully! We will alert you when the tournament begins."
+          />
+        )
+      }
+    } else if (activity.type === "deplacement") {
+      return (
+        <PaymentFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} activityTitle={activity.title} />
+      )
+    } else if (activity.type === "matchAmical") {
+      return (
+        <SimpleConfirmationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          activityTitle={activity.title}
+          message="Your place is reserved successfully!"
+        />
+      )
+    }
+
+    // Default case
+    return (
+      <SimpleConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        activityTitle={activity.title}
+        message="Thank you for your interest in this activity!"
+      />
+    )
   }
 
   return (
@@ -117,10 +168,8 @@ const Activity = ({ activity }) => {
         </button>
       </div>
 
-      {/* Team Creation Modal - Moved outside of the card component */}
-      {isModalOpen && (
-        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} activityTitle={activity.title} />
-      )}
+      {/* Render the appropriate modal based on activity type */}
+      {renderModal()}
     </motion.div>
   )
 }
