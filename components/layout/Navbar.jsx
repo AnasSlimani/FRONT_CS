@@ -59,7 +59,14 @@ export default function Navbar() {
         window.location.href = '/';
       }
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
+      
+      if (error.response.data == "Token expired - please login again") {
+        console.log(true);
+        alert(error.response.data)
+        localStorage.removeItem("token");
+        window.location.href = '/';
+      }
     }
   };
 
