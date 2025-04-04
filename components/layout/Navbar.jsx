@@ -68,6 +68,7 @@ export default function Navbar() {
   }
 
   const logout = async (e) => {
+
     e.preventDefault()
     try {
       const response = await api.post("/users/logout")
@@ -76,7 +77,9 @@ export default function Navbar() {
         setToken(null)
         window.location.href = "/"
       }
+   
     } catch (error) {
+
       console.log(error.response?.data)
 
       if (error.response?.data === "Token expired - please login again") {

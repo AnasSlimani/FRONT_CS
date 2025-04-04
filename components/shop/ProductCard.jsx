@@ -75,11 +75,12 @@ const ProductCard = ({ product }) => {
       <div className="p-4">
         <div className="text-sm text-gray-500 mb-1">{product.size}</div>
         <div className="flex justify-between items-center mb-2">
-          <h3 className="text-lg font-semibold text-blue-950">{product.productName}</h3>
+          <h3 className="text-lg font-semibold text-blue-950">{product.productCategory}</h3>
           <ArrowUpRight className="h-4 w-4 text-gray-500" />
         </div>
 
         <div className="flex items-center justify-between mb-1">
+
           <div className="text-xl font-bold text-blue-950">{product.productPrice}€</div>
           <span className="bg-teal-500 text-white text-xs px-2 py-1 rounded-full">Lowest price</span>
         </div>
