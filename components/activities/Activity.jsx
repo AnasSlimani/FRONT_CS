@@ -98,8 +98,8 @@ const Activity = ({ activity }) => {
       {/* Activity Image with Overlay */}
       <div className="relative h-56 w-full">
         <Image
-          src={activity.image || "/images/activity-placeholder.jpg"}
-          alt={activity.title}
+              src={`/images/${activity.image}`}
+              alt={activity.title}
           fill
           className="object-cover"
         />
@@ -108,7 +108,7 @@ const Activity = ({ activity }) => {
         {/* Category Badge */}
         <div className="absolute top-4 left-4 bg-teal-500 text-white px-3 py-1 rounded-full font-medium text-sm shadow-lg backdrop-blur-sm bg-opacity-80 flex items-center">
           {getActivityIcon(activity.type)}
-          <span className="ml-1.5">{activity.category}</span>
+          <span className="ml-1.5">{activity.type}</span>
         </div>
 
         {/* Date Badge */}
@@ -129,7 +129,7 @@ const Activity = ({ activity }) => {
             href={`/activities/${activity.id}`}
             className="group-hover:text-teal-400 transition-colors duration-200"
           >
-            {activity.title}
+            {activity.name}
           </Link>
         </h3>
 
@@ -144,12 +144,12 @@ const Activity = ({ activity }) => {
             </div>
             <div className="flex items-center text-sm text-gray-300">
               <MapPin className="w-4 h-4 mr-2 text-teal-400" />
-              <span className="truncate">{activity.location}</span>
+              <span className="truncate">{activity.localisation}</span>
             </div>
-            {activity.participants && (
+            {activity.nbrParticipants && (
               <div className="flex items-center text-sm text-gray-300 col-span-2">
                 <Users className="w-4 h-4 mr-2 text-teal-400" />
-                <span>{activity.participants} participants</span>
+                <span>{activity.nbrParticipants} participants</span>
               </div>
             )}
           </div>
