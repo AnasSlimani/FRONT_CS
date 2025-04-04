@@ -24,11 +24,11 @@ const ShopSidebar = ({ filters, onFilterChange, setFilteredProducts }) => {
 
   // Available sizes
   const sizes = [
-    { id: "s", label: "S" },
-    { id: "m", label: "M" },
-    { id: "l", label: "L" },
-    { id: "xl", label: "XL" },
-    { id: "xxl", label: "XXL" },
+    { id: "S", label: "S" },
+    { id: "M", label: "M" },
+    { id: "L", label: "L" },
+    { id: "XL", label: "XL" },
+    { id: "XXL", label: "XXL" },
   ]
 
   // State for expanded sections

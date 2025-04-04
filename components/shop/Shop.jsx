@@ -142,3 +142,42 @@ const Shop = () => {
 }
 
 export default Shop
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// {
+//   "chop": [{
+//               "productId":"sdvdv",
+//               "etat":"reserve ",
+//             },
+//             {
+//               "productId":"sdvdv",
+//               "etat":"achete",
+//             }
+//           ]
+// }

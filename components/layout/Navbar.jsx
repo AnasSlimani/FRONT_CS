@@ -52,14 +52,23 @@ export default function Navbar() {
 
   const logout = async (e) => {
     e.preventDefault();
+    
     try {
       const response = await api.post("/users/logout");
       if ((response.status = "200")) {
         localStorage.removeItem("token");
         window.location.href = '/';
       }
+   
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
+      
+      if (error.response.data == "Token expired - please login again") {
+        console.log(true);
+        alert(error.response.data)
+        localStorage.removeItem("token");
+        window.location.href = '/';
+      }
     }
   };
 
