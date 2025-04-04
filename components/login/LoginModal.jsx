@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X } from "lucide-react"
 import { Label } from "@/components/ui/label"
@@ -15,6 +15,14 @@ const LoginModal = ({ isOpen, onClose }) => {
     password: "",
   })
   const [mounted, setMounted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  // Reference for Google button
+  const googleButtonRef = useRef(null)
+
+  // State to track if Google script is loaded
+  const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false)
 
   // Handle mounting for portal
   useEffect(() => {
@@ -35,8 +43,71 @@ const LoginModal = ({ isOpen, onClose }) => {
     }
   }, [isOpen])
 
+  // Initialize Google Sign-In
+  useEffect(() => {
+    if (!isOpen) return
+
+    // Check if script is already loaded
+    if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+      setGoogleScriptLoaded(true)
+      initializeGoogleSignIn()
+      return
+    }
+
+    // Load the Google Identity Services script
+    const loadGoogleScript = () => {
+      const script = document.createElement("script")
+      script.src = "https://accounts.google.com/gsi/client"
+      script.async = true
+      script.defer = true
+      script.onload = () => {
+        setGoogleScriptLoaded(true)
+        initializeGoogleSignIn()
+      }
+      document.body.appendChild(script)
+      return script
+    }
+
+    const script = loadGoogleScript()
+
+    return () => {
+      // Clean up
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script)
+      }
+      // Revoke Google Sign-In
+      if (window.google) {
+        window.google.accounts.id.cancel()
+      }
+    }
+  }, [isOpen])
+
+  // Initialize Google button
+  const initializeGoogleSignIn = () => {
+    if (window.google && googleButtonRef.current) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        callback: handleGoogleSignIn,
+        auto_select: false,
+      })
+
+      // Display the Google Sign-In button
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+        width: 280,
+      })
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError("")
+    setIsLoading(true)
+
     try {
       const response = await api.post("/users/login", loginForm, { public: true })
       const token = response.data
@@ -45,8 +116,10 @@ const LoginModal = ({ isOpen, onClose }) => {
       onClose() // Close the modal after successful login
       window.location.href = "/"
     } catch (error) {
-      alert("User not found: " + error)
-      throw error
+      setError("Invalid email or password. Please try again.")
+      console.error("Login error:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -56,6 +129,51 @@ const LoginModal = ({ isOpen, onClose }) => {
       ...prevState,
       [name]: value,
     }))
+  }
+
+  // Handle Google Sign-In response
+const handleGoogleSignIn = async (response) => {
+    try {
+      setIsLoading(true);
+      setError("");
+  
+      // Decode the JWT token to get user information
+      const decodedToken = parseJwt(response.credential);
+      console.log("Google user info:", decodedToken);
+  
+      // Créer une requête pour l'authentification Google
+      const googleAuthData = {
+        email: decodedToken.email,
+        googleId: decodedToken.sub,
+        name: `${decodedToken.given_name} ${decodedToken.family_name}`
+      };
+  
+      // Utiliser l'endpoint Google Login
+      const loginResponse = await api.post(
+        "users/google-login",
+        googleAuthData,
+        { public: true }
+      );
+  
+      // Stocker le token et rediriger
+      localStorage.setItem("token", loginResponse.data);
+      onClose();
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Error with Google Sign-In:", error);
+      setError(error.response?.data || "Failed to sign in with Google. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper function to decode JWT token
+  const parseJwt = (token) => {
+    try {
+      return JSON.parse(atob(token.split(".")[1]))
+    } catch (e) {
+      return null
+    }
   }
 
   // Animation variants
@@ -92,8 +210,14 @@ const LoginModal = ({ isOpen, onClose }) => {
 
               <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">Welcome to JAGUARS</h2>
               <p className="mt-2 max-w-sm text-sm text-neutral-600 dark:text-neutral-300">
-                Sign up to jaguars if you can because we don&apos;t have a login flow yet
+                Sign in to your account to continue
               </p>
+
+              {/* Error message */}
+              {error && (
+                <div className="mt-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg">{error}</div>
+              )}
+
               <form className="my-8" onSubmit={handleSubmit}>
                 <LabelInputContainer className="mb-4">
                   <Label htmlFor="email">Email Address</Label>
@@ -119,14 +243,21 @@ const LoginModal = ({ isOpen, onClose }) => {
                 </LabelInputContainer>
 
                 <button
-                  className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset]"
+                  className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] disabled:opacity-70"
                   type="submit"
+                  disabled={isLoading}
                 >
-                  Log in &rarr;
+                  {isLoading ? "Processing..." : "Log in →"}
                   <BottomGradient />
                 </button>
 
                 <div className="my-8 h-[1px] w-full bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-neutral-700" />
+
+                {/* Google Sign-In Button */}
+                <div className="flex flex-col items-center">
+                  <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">Or sign in with</p>
+                  <div ref={googleButtonRef} className="google-signin-button w-full flex justify-center"></div>
+                </div>
               </form>
             </div>
           </motion.div>
