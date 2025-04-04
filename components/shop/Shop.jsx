@@ -84,7 +84,7 @@ const Shop = () => {
 
   return (
     <CartProvider>
-      <div className={`pt-5 ${montserrat.variable} ${oswald.variable}`}>
+      <div className={`pt-2 ${montserrat.variable} ${oswald.variable}`}>
         {/* Header with Shopping Cart */}
         <div className="fixed top-24 right-6 z-50">
           <ShoppingCart />
