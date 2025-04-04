@@ -4,6 +4,10 @@ import { motion } from "framer-motion"
 import Image from "next/image"
 import { Calendar, MapPin, Clock, Users, Trophy, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { useState } from "react"
+import TeamCreationModal from "./modals/TeamCreationModal"
+import SimpleConfirmationModal from "./modals/SimpleConfirmationModal"
+import PaymentFormModal from "./modals/PaymentFormModal"
 
 const Activity = ({ activity }) => {
   // Determine icon based on activity type
@@ -18,6 +22,69 @@ const Activity = ({ activity }) => {
       default:
         return <Calendar className="w-5 h-5 text-teal-400" />
     }
+  }
+
+  // State for controlling registration status and modal
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Handle button click based on registration status
+  const handleButtonClick = (e) => {
+    if (isRegistrationOpen) {
+      e.preventDefault() // Prevent navigation
+      e.stopPropagation() // Stop event propagation
+      setIsModalOpen(true)
+    }
+    // If registration is closed, let the link navigate to details page
+  }
+
+  // Determine which modal to show based on activity type and subtype
+  const renderModal = () => {
+    if (!isModalOpen) return null
+
+    if (activity.type === "tournament") {
+      if (activity.subType === "football" || activity.subType === "basketball") {
+        return (
+          <TeamCreationModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            activityTitle={activity.title}
+          />
+        )
+      } else if (activity.subType === "billard") {
+        return (
+          <SimpleConfirmationModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            activityTitle={activity.title}
+            message="Your place is reserved successfully! We will alert you when the tournament begins."
+          />
+        )
+      }
+    } else if (activity.type === "deplacement") {
+      return (
+        <PaymentFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} activityTitle={activity.title} />
+      )
+    } else if (activity.type === "matchAmical") {
+      return (
+        <SimpleConfirmationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          activityTitle={activity.title}
+          message="Your place is reserved successfully!"
+        />
+      )
+    }
+
+    // Default case
+    return (
+      <SimpleConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        activityTitle={activity.title}
+        message="Thank you for your interest in this activity!"
+      />
+    )
   }
 
   return (
@@ -88,18 +155,21 @@ const Activity = ({ activity }) => {
           </div>
         </div>
 
-        {/* Action Button */}
-        <Link href={`/activities/${activity.id}`}>
+        {/* Action Button - Changed to button element instead of Link */}
+        <button onClick={handleButtonClick} className="w-full">
           <motion.div
             className="flex items-center justify-center w-full py-3 bg-gradient-to-r from-teal-600 to-teal-500 text-white rounded-lg font-medium hover:from-teal-500 hover:to-teal-400 transition-all duration-300 shadow-lg shadow-teal-900/20"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <span>View Details</span>
+            {isRegistrationOpen ? <span>Participate</span> : <span>View Details</span>}
             <ArrowRight className="w-4 h-4 ml-2" />
           </motion.div>
-        </Link>
+        </button>
       </div>
+
+      {/* Render the appropriate modal based on activity type */}
+      {renderModal()}
     </motion.div>
   )
 }
