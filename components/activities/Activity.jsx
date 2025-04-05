@@ -8,6 +8,7 @@ import { useState } from "react"
 import TeamCreationModal from "./modals/TeamCreationModal"
 import SimpleConfirmationModal from "./modals/SimpleConfirmationModal"
 import PaymentFormModal from "./modals/PaymentFormModal"
+import LoginModal from "@/components/login/LoginModal"
 
 const Activity = ({ activity }) => {
   // Determine icon based on activity type
@@ -24,18 +25,37 @@ const Activity = ({ activity }) => {
     }
   }
 
-  // State for controlling registration status and modal
-  const [isRegistrationOpen, setIsRegistrationOpen] = useState(true)
+  // State for controlling registration status and modals
+  const isfull = activity.isTournamentFull;
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+
+  const handleCheckLogin = () => {
+    const token = localStorage.getItem("token")
+
+    if (!token) {
+      alert("Please Log in to participate !")
+      setIsLoginModalOpen(true)
+      return
+    }
+
+    // If user is logged in, show the appropriate activity modal
+    setIsModalOpen(true)
+  }
 
   // Handle button click based on registration status
   const handleButtonClick = (e) => {
-    if (isRegistrationOpen) {
+    if (!isfull) {
       e.preventDefault() // Prevent navigation
       e.stopPropagation() // Stop event propagation
-      setIsModalOpen(true)
+      handleCheckLogin()
     }
     // If registration is closed, let the link navigate to details page
+  }
+
+  // Close login modal
+  const closeLoginModal = () => {
+    setIsLoginModalOpen(false)
   }
 
   // Determine which modal to show based on activity type and subtype
@@ -43,15 +63,17 @@ const Activity = ({ activity }) => {
     if (!isModalOpen) return null
 
     if (activity.type === "tournament") {
-      if (activity.subType === "football" || activity.subType === "basketball") {
+      if (activity.sport === "football" || activity.sport === "basketball") {
         return (
           <TeamCreationModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             activityTitle={activity.title}
+            nbrParticipant={activity.nbrPerTeam}
+            activityID={activity.id}
           />
         )
-      } else if (activity.subType === "billard") {
+      } else if (activity.sport === "billard") {
         return (
           <SimpleConfirmationModal
             isOpen={isModalOpen}
@@ -97,12 +119,7 @@ const Activity = ({ activity }) => {
     >
       {/* Activity Image with Overlay */}
       <div className="relative h-56 w-full">
-        <Image
-              src={`/images/${activity.image}`}
-              alt={activity.title}
-          fill
-          className="object-cover"
-        />
+        <Image src={`/images/${activity.image}`} alt={activity.title} fill className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
 
         {/* Category Badge */}
@@ -162,13 +179,16 @@ const Activity = ({ activity }) => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            {isRegistrationOpen ? <span>Participate</span> : <span>View Details</span>}
+            {!isfull ? <span>Participate</span> : <span>View Details</span>}
             <ArrowRight className="w-4 h-4 ml-2" />
           </motion.div>
         </button>
       </div>
 
-      {/* Render the appropriate modal based on activity type */}
+      {/* Login Modal */}
+      <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
+
+      {/* Render the appropriate activity modal based on activity type */}
       {renderModal()}
     </motion.div>
   )
