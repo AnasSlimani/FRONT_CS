@@ -129,21 +129,7 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle }) => {
             </div>
           </div>
 
-          {/* Email */}
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email (optional)
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-3 shadow-sm"
-              placeholder="Enter your email address"
-            />
-          </div>
+         
 
           {/* Phone */}
           <div className="mb-6">
