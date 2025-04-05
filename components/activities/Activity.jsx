@@ -43,7 +43,7 @@ const Activity = ({ activity }) => {
     if (!isModalOpen) return null
 
     if (activity.type === "tournament") {
-      if (activity.subType === "football" || activity.subType === "basketball") {
+      if (activity.sport === "football" || activity.subType === "basketball") {
         return (
           <TeamCreationModal
             isOpen={isModalOpen}
@@ -51,7 +51,7 @@ const Activity = ({ activity }) => {
             activityTitle={activity.title}
           />
         )
-      } else if (activity.subType === "billard") {
+      } else if (activity.sport === "billard") {
         return (
           <SimpleConfirmationModal
             isOpen={isModalOpen}
@@ -175,4 +175,5 @@ const Activity = ({ activity }) => {
 }
 
 export default Activity
+
 
