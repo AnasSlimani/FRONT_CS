@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState , useEffect } from "react"
 import { motion } from "framer-motion"
+import { jwtDecode } from "jwt-decode"
+import api from "@/app/api/axios"
 import Image from "next/image"
 import {
   User,
@@ -21,15 +23,16 @@ import {
 } from "lucide-react"
 
 const Profile = () => {
+  const [user,setUser] = useState({})
+
   // State for form data
   const [formData, setFormData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Sports Avenue, New York, NY",
-    birthDate: "1990-05-15",
-    bio: "Passionate sports enthusiast with 5+ years of experience in competitive tournaments. Team player with a focus on strategy and technique improvement.",
+    username: user.username ,
+    email: user.email,
+    phone: "+212 .........",
+    address: "Khouribga Morocco",
+    birthDate: "DD/MM/YYYY",
+    bio: "Insert your bio to be saved here !",
   })
 
   // State for edit mode
@@ -43,6 +46,43 @@ const Profile = () => {
       [name]: value,
     }))
   }
+
+  
+  const [currentUserId, setCurrentUserId] = useState(null)
+  
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setCurrentUserId(decoded.id);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!currentUserId) return;
+      try {
+        const response = await api.get(`/users/${currentUserId}`);
+        setUser(response.data);
+        setFormData(prev => ({
+          ...prev,
+          username: response.data.username,
+          firstName: response.data.firstName,
+          lastName: response.data.lastName,
+          email: response.data.email,
+          // ... populate other fields too
+        }));
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+  
+    fetchUser();
+  }, [currentUserId]);
 
   // Handle form submission
   const handleSubmit = (e) => {
@@ -99,7 +139,7 @@ const Profile = () => {
                 </button>
               </div>
               <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-                {formData.firstName} {formData.lastName}
+                {formData.username} 
               </h2>
               <p className="text-gray-500 dark:text-gray-400">Premium Member</p>
 
