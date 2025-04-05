@@ -1,19 +1,79 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { Upload, Users, Shield, Check, AlertCircle } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { Upload, Users, Shield, Check, AlertCircle, User } from "lucide-react"
 import Image from "next/image"
 import ModalWrapper from "./ModalWrapper"
+import { jwtDecode } from "jwt-decode"
+import api from "@/app/api/axios"
 
-const TeamCreationModal = ({ isOpen, onClose, activityTitle }) => {
+const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , activityID }) => {
+  // Get current user ID from token
+  const [userID, setUserID] = useState(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (token) {
+      try {
+        const decoded = jwtDecode(token)
+        setUserID(decoded.id)
+      } catch (error) {
+        console.error("Error decoding token:", error)
+      }
+    }
+  }, [])
+
   const [teamName, setTeamName] = useState("")
-  const [members, setMembers] = useState([{ name: "", email: "" }])
+  const [members, setMembers] = useState([{ name: "", email: "", id: "" }])
   const [logoPreview, setLogoPreview] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState("")
   const [formSuccess, setFormSuccess] = useState(false)
 
+  // State for user suggestions
+  const [allUsers, setAllUsers] = useState([])
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false)
+  const [suggestions, setSuggestions] = useState([])
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [activeInputIndex, setActiveInputIndex] = useState(null)
+
   const fileInputRef = useRef(null)
+  const suggestionsRef = useRef(null)
+
+  // Fetch all users when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchUsers()
+    }
+  }, [isOpen])
+
+  // Handle clicks outside suggestions
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
+        setShowSuggestions(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+
+  // Fetch users from API
+  const fetchUsers = async () => {
+    setIsLoadingUsers(true)
+    try {
+      const response = await api.get("/users")
+      setAllUsers(response.data)
+    } catch (error) {
+      console.error("Error fetching users:", error)
+    } finally {
+      setIsLoadingUsers(false)
+    }
+  }
 
   // Handle logo upload
   const handleLogoUpload = (e) => {
@@ -29,7 +89,9 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle }) => {
 
   // Handle adding a new member field
   const handleAddMember = () => {
-    setMembers([...members, { name: "", email: "" }])
+    if (members.length < nbrParticipant) {
+      setMembers([...members, { name: "", email: "", id: "" }])
+    }
   }
 
   // Handle removing a member field
@@ -39,15 +101,69 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle }) => {
     setMembers(newMembers)
   }
 
-  // Handle member field changes
+  // Handle member field changes and show suggestions
   const handleMemberChange = (index, field, value) => {
     const newMembers = [...members]
     newMembers[index][field] = value
     setMembers(newMembers)
+
+    // Only show suggestions for the name field
+    if (field === "name") {
+      setActiveInputIndex(index)
+
+      if (value.trim().length > 0) {
+        // Filter users based on input
+        const filteredSuggestions = allUsers.filter((user) => user.username.toLowerCase().includes(value.toLowerCase()))
+        setSuggestions(filteredSuggestions)
+        setShowSuggestions(true)
+        setActiveSuggestionIndex(-1)
+      } else {
+        setSuggestions([])
+        setShowSuggestions(false)
+      }
+    }
+  }
+
+  // Handle selecting a suggestion
+  const handleSelectSuggestion = (user, index) => {
+    const newMembers = [...members]
+    newMembers[index] = {
+      name: user.username,
+      email: user.email,
+      id: user.id,
+    }
+    setMembers(newMembers)
+    setShowSuggestions(false)
+  }
+
+  // Handle keyboard navigation for suggestions
+  const handleKeyDown = (e, index) => {
+    // Only process if suggestions are showing
+    if (!showSuggestions || suggestions.length === 0) return
+
+    // Arrow down
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setActiveSuggestionIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev))
+    }
+    // Arrow up
+    else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setActiveSuggestionIndex((prev) => (prev > 0 ? prev - 1 : 0))
+    }
+    // Enter
+    else if (e.key === "Enter" && activeSuggestionIndex >= 0) {
+      e.preventDefault()
+      handleSelectSuggestion(suggestions[activeSuggestionIndex], index)
+    }
+    // Escape
+    else if (e.key === "Escape") {
+      setShowSuggestions(false)
+    }
   }
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault()
     setFormError("")
 
@@ -62,8 +178,8 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle }) => {
       return
     }
 
-    if (members.length < 1) {
-      setFormError("At least one team member is required")
+    if (members.length !== nbrParticipant) {
+      setFormError(`Please enter ${nbrParticipant} members`)
       return
     }
 
@@ -74,19 +190,38 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle }) => {
       }
     }
 
+    // Create team object
+    const team = {
+      name: teamName,
+      logo: logoPreview,
+      captain: { id: userID },
+      members: members.map((member) => ({ id: member.id })),
+    }
+
+    console.log("Submitting team:", team)
+    
+    try {
+      const response = await api.post(`/teams/${activityID}`,team);
+      const data = response.status;
+      if (data == 200) {
+        setFormSuccess(true)      } 
+    } catch (error) {
+      console.log(error);
+    }
+
     // Simulate form submission
     setIsSubmitting(true)
 
     setTimeout(() => {
       setIsSubmitting(false)
-      setFormSuccess(true)
+      
 
       // Close modal after success message
       setTimeout(() => {
         onClose()
         // Reset form
         setTeamName("")
-        setMembers([{ name: "", email: "" }])
+        setMembers([{ name: "", email: "", id: "" }])
         setLogoPreview(null)
         setFormSuccess(false)
       }, 2000)
@@ -179,14 +314,16 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle }) => {
           {/* Team members */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium text-gray-700">Team Members</label>
-              <button
-                type="button"
-                onClick={handleAddMember}
-                className="text-xs text-teal-600 hover:text-teal-700 transition-colors"
-              >
-                + Add Member
-              </button>
+              <label className="block text-sm font-medium text-gray-700">Team Members: {nbrParticipant} required</label>
+              {members.length < nbrParticipant && (
+                <button
+                  type="button"
+                  onClick={handleAddMember}
+                  className="text-xs text-teal-600 hover:text-teal-700 transition-colors"
+                >
+                  + Add Member
+                </button>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -200,10 +337,51 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle }) => {
                       type="text"
                       value={member.name}
                       onChange={(e) => handleMemberChange(index, "name", e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, index)}
+                      onFocus={() => setActiveInputIndex(index)}
                       className="bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full pl-10 p-2.5 shadow-sm"
-                      placeholder="Member name"
+                      placeholder="Member username"
+                      autoComplete="off"
                     />
+
+                    {/* Suggestions dropdown */}
+                    {showSuggestions && activeInputIndex === index && (
+                      <div
+                        ref={suggestionsRef}
+                        className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm border border-gray-200"
+                      >
+                        {isLoadingUsers ? (
+                          <div className="px-4 py-2 text-sm text-gray-500">Loading users...</div>
+                        ) : suggestions.length > 0 ? (
+                          <ul className="divide-y divide-gray-100">
+                            {suggestions.map((user, i) => (
+                              <li
+                                key={user.id}
+                                className={`cursor-pointer select-none relative py-2 pl-3 pr-9 text-gray-900 ${
+                                  i === activeSuggestionIndex ? "bg-teal-50" : ""
+                                }`}
+                                onClick={() => handleSelectSuggestion(user, index)}
+                                onMouseEnter={() => setActiveSuggestionIndex(i)}
+                              >
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0">
+                                    <User className="h-5 w-5 text-gray-400" />
+                                  </div>
+                                  <div className="ml-3 flex-1">
+                                    <p className="text-sm font-medium text-gray-900">{user.username}</p>
+                                    <p className="text-sm text-gray-500">{user.email}</p>
+                                  </div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="px-4 py-2 text-sm text-gray-500">No users found</div>
+                        )}
+                      </div>
+                    )}
                   </div>
+
                   <div className="relative flex-1">
                     <input
                       type="email"
@@ -211,8 +389,10 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle }) => {
                       onChange={(e) => handleMemberChange(index, "email", e.target.value)}
                       className="bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5 shadow-sm"
                       placeholder="Email (optional)"
+                      readOnly={member.id !== ""}
                     />
                   </div>
+
                   {members.length > 1 && (
                     <button
                       type="button"
