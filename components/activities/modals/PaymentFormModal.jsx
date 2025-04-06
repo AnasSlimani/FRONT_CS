@@ -1,47 +1,100 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CreditCard, User, Check, AlertCircle } from "lucide-react"
 import ModalWrapper from "./ModalWrapper"
+import api from "@/app/api/axios"
+import { jwtDecode } from "jwt-decode"
 
-const PaymentFormModal = ({ isOpen, onClose, activityTitle }) => {
-  const [formData, setFormData] = useState({
-    fullName: "",
-    idCard: "",
-    email: "",
-    phone: "",
-  })
+const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState("")
   const [formSuccess, setFormSuccess] = useState(false)
+  let userID ;
+  let roleToken; 
+  const [formData, setFormData] = useState({
+    type: "INDIVIDUAL",
+    participant: {
+      id: "",
+      role : "",
+      idCard: "",
+    }
+  })
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    const { name, value } = e.target;
+    
+    // Check if the field is in the participant object
+    if (name in formData.participant) {
+      setFormData(prev => ({
+        ...prev,
+        participant: {
+          ...prev.participant,
+          [name]: value
+        }
+      }));
+    } else {
+      // For top-level fields (though you don't have any in your current form)
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   }
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+      const token = localStorage.getItem("token")
+      if (token) {
+        try {
+          const decoded = jwtDecode(token)
+          // userID = decoded.id;
+          // roleToken = decoded.role;
+          setFormData({
+            type: "INDIVIDUAL",
+            participant: {
+              id: decoded.id,
+              role : decoded.role,
+              idCard: "",
+            }
+          })
+        } catch (error) {
+          console.error("Error decoding token:", error)
+        }
+      }
+    }, [])
+
+   
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setFormError("")
 
-    // Validate form
-    if (!formData.fullName.trim()) {
-      setFormError("Full name is required")
-      return
-    }
-
+   
     if (!formData.idCard.trim()) {
       setFormError("ID card number is required")
       return
     }
 
-    if (!formData.phone.trim()) {
-      setFormError("Phone number is required")
-      return
-    }
+ 
 
     // Simulate form submission
     setIsSubmitting(true)
+
+    console.log(formData);
+
+    try {
+      
+      const response = await api.post(`/activities/${activityID}/participants`, formData);      
+      const status = response.status;
+      if(status === 200){
+        alert("Reservation completed");
+      }
+    } catch (error) {
+      console.log(error );
+      
+    }
+
 
     setTimeout(() => {
       setIsSubmitting(false)
@@ -52,14 +105,18 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle }) => {
         onClose()
         // Reset form
         setFormData({
-          fullName: "",
-          idCard: "",
-          email: "",
-          phone: "",
-        })
+          type: "INDIVIDUAL",
+          participant: {
+            id: "",
+            role : "",
+            idCard: "",
+        }
+      })
         setFormSuccess(false)
       }, 2000)
     }, 1500)
+
+    
   }
 
   return (
@@ -87,26 +144,7 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle }) => {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="p-6">
-          {/* Full Name */}
-          <div className="mb-4">
-            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <User className="h-5 w-5 text-gray-500" />
-              </div>
-              <input
-                type="text"
-                id="fullName"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                className="bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full pl-10 p-3 shadow-sm"
-                placeholder="Enter your full name"
-              />
-            </div>
-          </div>
+    
 
           {/* ID Card */}
           <div className="mb-4">
@@ -121,7 +159,7 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle }) => {
                 type="text"
                 id="idCard"
                 name="idCard"
-                value={formData.idCard}
+                value={formData.participant.idCard}
                 onChange={handleChange}
                 className="bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full pl-10 p-3 shadow-sm"
                 placeholder="Enter your ID card number"
@@ -129,37 +167,9 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle }) => {
             </div>
           </div>
 
-          {/* Email */}
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email (optional)
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-3 shadow-sm"
-              placeholder="Enter your email address"
-            />
-          </div>
+          
 
-          {/* Phone */}
-          <div className="mb-6">
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className="bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-3 shadow-sm"
-              placeholder="Enter your phone number"
-            />
-          </div>
+          
 
           {/* Payment information notice */}
           <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">

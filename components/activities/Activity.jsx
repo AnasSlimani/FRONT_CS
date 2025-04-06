@@ -86,7 +86,7 @@ const Activity = ({ activity }) => {
       }
     } else if (activity.type === "deplacement") {
       return (
-        <PaymentFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} activityTitle={activity.title} />
+        <PaymentFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} activityTitle={activity.title} activityID={activity.id} />
       )
     } else if (activity.type === "matchAmical") {
       return (
