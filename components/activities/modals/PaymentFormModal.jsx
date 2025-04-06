@@ -92,7 +92,7 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
 
       const status = response.status;
       if(status === 200){
-        alert("Reservation completed");
+        setFormSuccess(true)
       }
     } catch (error) {
       console.log(error );
@@ -102,7 +102,6 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
 
     setTimeout(() => {
       setIsSubmitting(false)
-      setFormSuccess(true)
 
       // Close modal after success message
       setTimeout(() => {
