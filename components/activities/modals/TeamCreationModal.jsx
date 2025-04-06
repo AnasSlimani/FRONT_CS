@@ -1,28 +1,18 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Upload, Users, Shield, Check, AlertCircle, User } from "lucide-react"
+import { Upload, Users, Shield, Check, AlertCircle, User, Info } from "lucide-react"
 import Image from "next/image"
 import ModalWrapper from "./ModalWrapper"
 import { jwtDecode } from "jwt-decode"
 import api from "@/app/api/axios"
 
-const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , activityID }) => {
-  // Get current user ID from token
+const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant, activityID }) => {
+  // State for current user
+  const [currentUser, setCurrentUser] = useState(null)
   const [userID, setUserID] = useState(null)
 
-  useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (token) {
-      try {
-        const decoded = jwtDecode(token)
-        setUserID(decoded.id)
-      } catch (error) {
-        console.error("Error decoding token:", error)
-      }
-    }
-  }, [])
-
+  // State for form data
   const [teamName, setTeamName] = useState("")
   const [members, setMembers] = useState([{ name: "", email: "", id: "" }])
   const [logoPreview, setLogoPreview] = useState(null)
@@ -38,8 +28,46 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [activeInputIndex, setActiveInputIndex] = useState(null)
 
+  // State for checking team participation
+  const [isCheckingParticipation, setIsCheckingParticipation] = useState(false)
+
   const fileInputRef = useRef(null)
   const suggestionsRef = useRef(null)
+
+  // Get current user from token when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const token = localStorage.getItem("token")
+      if (token) {
+        try {
+          const decoded = jwtDecode(token)
+          setUserID(decoded.id)
+          fetchCurrentUser(decoded.id)
+        } catch (error) {
+          console.error("Error decoding token:", error)
+        }
+      }
+    }
+  }, [isOpen])
+
+  // Fetch current user details
+  const fetchCurrentUser = async (id) => {
+    try {
+      const response = await api.get(`/users/${id}`)
+      setCurrentUser(response.data)
+
+      // Auto-fill the first member field with current user's info
+      const updatedMembers = [...members]
+      updatedMembers[0] = {
+        name: response.data.username,
+        email: response.data.email,
+        id: response.data.id,
+      }
+      setMembers(updatedMembers)
+    } catch (error) {
+      console.error("Error fetching current user:", error)
+    }
+  }
 
   // Fetch all users when modal opens
   useEffect(() => {
@@ -105,6 +133,13 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
   const handleMemberChange = (index, field, value) => {
     const newMembers = [...members]
     newMembers[index][field] = value
+
+    // If clearing a field, also clear the ID
+    if (value === "" && field === "name") {
+      newMembers[index].id = ""
+      newMembers[index].email = ""
+    }
+
     setMembers(newMembers)
 
     // Only show suggestions for the name field
@@ -113,7 +148,12 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
 
       if (value.trim().length > 0) {
         // Filter users based on input
-        const filteredSuggestions = allUsers.filter((user) => user.username.toLowerCase().includes(value.toLowerCase()))
+        const filteredSuggestions = allUsers.filter(
+          (user) =>
+            user.username.toLowerCase().includes(value.toLowerCase()) &&
+            // Exclude users that are already selected in other fields
+            !members.some((member, i) => i !== index && member.id === user.id && member.id !== ""),
+        )
         setSuggestions(filteredSuggestions)
         setShowSuggestions(true)
         setActiveSuggestionIndex(-1)
@@ -126,6 +166,14 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
 
   // Handle selecting a suggestion
   const handleSelectSuggestion = (user, index) => {
+    // Check if user is already selected in another field
+    const isAlreadySelected = members.some((member, i) => i !== index && member.id === user.id && member.id !== "")
+
+    if (isAlreadySelected) {
+      setFormError("This user is already selected as a team member")
+      return
+    }
+
     const newMembers = [...members]
     newMembers[index] = {
       name: user.username,
@@ -162,8 +210,48 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
     }
   }
 
+  // Check if users are already participating in other teams for this activity
+  const checkUserParticipation = async (memberIds) => {
+    setIsCheckingParticipation(true)
+    try {
+      // We'll check each member individually
+      for (const memberId of memberIds) {
+        // Get teams where this user is a member
+        const teamsResponse = await api.get(`/teams/member/${memberId}`)
+        const userTeams = teamsResponse.data
+
+        // Get the activity to check its team participants
+        const activityResponse = await api.get(`/activities/${activityID}`)
+        const activity = activityResponse.data
+
+        // Check if any of the user's teams are already participating in this activity
+        const isAlreadyParticipating = userTeams.some(
+          (team) =>
+            activity.teamParticipants &&
+            activity.teamParticipants.some((participantTeam) => participantTeam.id === team.id),
+        )
+
+        if (isAlreadyParticipating) {
+          // Find which user has the conflict
+          const conflictUser = allUsers.find((user) => user.id === memberId)
+          return {
+            hasConflict: true,
+            conflictUser: conflictUser ? conflictUser.username : "A team member",
+          }
+        }
+      }
+
+      return { hasConflict: false }
+    } catch (error) {
+      console.error("Error checking user participation:", error)
+      return { hasConflict: false } // Default to allowing submission if check fails
+    } finally {
+      setIsCheckingParticipation(false)
+    }
+  }
+
   // Handle form submission
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setFormError("")
 
@@ -184,10 +272,28 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
     }
 
     for (const member of members) {
-      if (!member.name.trim()) {
-        setFormError("All team members must have a name")
+      if (!member.name.trim() || !member.id) {
+        setFormError("All team members must be selected from the suggestions")
         return
       }
+    }
+
+    // Check for duplicate members
+    const memberIds = members.map((member) => member.id)
+    const uniqueMemberIds = [...new Set(memberIds)]
+    if (uniqueMemberIds.length !== memberIds.length) {
+      setFormError("Each team member must be unique")
+      return
+    }
+
+    setIsSubmitting(true)
+
+    // Check if any member is already participating in another team for this activity
+    const participationCheck = await checkUserParticipation(memberIds)
+    if (participationCheck.hasConflict) {
+      setFormError(`${participationCheck.conflictUser} is already participating in this activity with another team`)
+      setIsSubmitting(false)
+      return
     }
 
     // Create team object
@@ -198,23 +304,20 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
       members: members.map((member) => ({ id: member.id })),
     }
 
-    console.log("Submitting team:", team)
-    
     try {
-      const response = await api.post(`/teams/${activityID}`,team);
-      const data = response.status;
-      if (data == 200) {
-        setFormSuccess(true)      } 
+      const response = await api.post(`/teams/${activityID}`, team)
+      if (response.status === 200) {
+        setFormSuccess(true)
+      }
     } catch (error) {
-      console.log(error);
+      console.error("Error creating team:", error)
+      setFormError(error.response?.data || "Failed to create team. Please try again.")
+      setIsSubmitting(false)
+      return
     }
-
-    // Simulate form submission
-    setIsSubmitting(true)
 
     setTimeout(() => {
       setIsSubmitting(false)
-      
 
       // Close modal after success message
       setTimeout(() => {
@@ -225,7 +328,7 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
         setLogoPreview(null)
         setFormSuccess(false)
       }, 2000)
-    }, 1500)
+    }, 1000)
   }
 
   const modalContent = (
@@ -326,6 +429,16 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
               )}
             </div>
 
+            {/* Info message about first member */}
+            {currentUser && (
+              <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-start">
+                <Info className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-600">
+                  The first member is automatically set to you as the team captain.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-3">
               {members.map((member, index) => (
                 <div key={index} className="flex items-center space-x-2">
@@ -339,9 +452,12 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
                       onChange={(e) => handleMemberChange(index, "name", e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onFocus={() => setActiveInputIndex(index)}
-                      className="bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full pl-10 p-2.5 shadow-sm"
+                      className={`bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full pl-10 p-2.5 shadow-sm ${
+                        index === 0 && currentUser ? "bg-gray-100" : ""
+                      }`}
                       placeholder="Member username"
                       autoComplete="off"
+                      readOnly={index === 0 && currentUser} // Make first field readonly if it's the current user
                     />
 
                     {/* Suggestions dropdown */}
@@ -387,13 +503,15 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
                       type="email"
                       value={member.email}
                       onChange={(e) => handleMemberChange(index, "email", e.target.value)}
-                      className="bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5 shadow-sm"
+                      className={`bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5 shadow-sm ${
+                        member.id !== "" || (index === 0 && currentUser) ? "bg-gray-100" : ""
+                      }`}
                       placeholder="Email (optional)"
-                      readOnly={member.id !== ""}
+                      readOnly={member.id !== "" || (index === 0 && currentUser)}
                     />
                   </div>
 
-                  {members.length > 1 && (
+                  {members.length > 1 && index !== 0 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveMember(index)}
@@ -439,10 +557,10 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant , ac
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isCheckingParticipation}
               className="px-6 py-2 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white text-sm rounded-lg transition-colors flex items-center justify-center min-w-[120px] shadow-sm"
             >
-              {isSubmitting ? (
+              {isSubmitting || isCheckingParticipation ? (
                 <svg
                   className="animate-spin h-5 w-5 text-white"
                   xmlns="http://www.w3.org/2000/svg"

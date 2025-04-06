@@ -41,6 +41,7 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
         [name]: value
       }));
     }
+
   }
 
   useEffect(() => {
@@ -57,6 +58,7 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
               role : decoded.role,
               idCard: "",
             }
+
           })
         } catch (error) {
           console.error("Error decoding token:", error)
@@ -71,7 +73,7 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
     setFormError("")
 
    
-    if (!formData.idCard.trim()) {
+    if (!formData.participant.idCard.trim()) {
       setFormError("ID card number is required")
       return
     }
@@ -85,7 +87,9 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
 
     try {
       
+
       const response = await api.post(`/activities/${activityID}/participants`, formData);      
+
       const status = response.status;
       if(status === 200){
         alert("Reservation completed");
@@ -112,6 +116,7 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
             idCard: "",
         }
       })
+
         setFormSuccess(false)
       }, 2000)
     }, 1500)

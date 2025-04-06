@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import { jwtDecode } from "jwt-decode"
+import api from "@/app/api/axios"
 import Image from "next/image"
 import {
   User,
@@ -18,22 +20,72 @@ import {
   CheckCircle,
   Trophy,
   Users,
+  AlertCircle,
 } from "lucide-react"
 
 const Profile = () => {
+  // State for user data
+  const [user, setUser] = useState({})
+  const [currentUserId, setCurrentUserId] = useState(null)
+
   // State for form data
   const [formData, setFormData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Sports Avenue, New York, NY",
-    birthDate: "1990-05-15",
-    bio: "Passionate sports enthusiast with 5+ years of experience in competitive tournaments. Team player with a focus on strategy and technique improvement.",
+    username: "",
+    email: "",
+    phoneNumber: "",
+    address: "",
+    birthDate: "",
   })
 
-  // State for edit mode
+  // State for edit mode and form status
   const [isEditing, setIsEditing] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [saveError, setSaveError] = useState("")
+
+  // Get current user ID from token
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (token) {
+      try {
+        const decoded = jwtDecode(token)
+        setCurrentUserId(decoded.id)
+      } catch (error) {
+        console.error("Error decoding token:", error)
+      }
+    }
+  }, [])
+
+  // Fetch user data when ID is available
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!currentUserId) return
+
+      try {
+        const response = await api.get(`/users/${currentUserId}`)
+        setUser(response.data)
+
+        // Format date for the input field if it exists
+        let formattedDate = ""
+        if (response.data.birthDate) {
+          const date = new Date(response.data.birthDate)
+          formattedDate = date.toISOString().split("T")[0]
+        }
+
+        setFormData({
+          username: response.data.username || "",
+          email: response.data.email || "",
+          phoneNumber: response.data.phoneNumber || "",
+          address: response.data.address || "",
+          birthDate: formattedDate,
+        })
+      } catch (error) {
+        console.error("Error fetching user:", error)
+      }
+    }
+
+    fetchUser()
+  }, [currentUserId])
 
   // Handle input change
   const handleChange = (e) => {
@@ -44,12 +96,54 @@ const Profile = () => {
     }))
   }
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    // In a real app, you would save the data to your backend here
-    console.log("Saving profile data:", formData)
-    setIsEditing(false)
+  // Update the handleSubmit function to properly handle both form submission and button click
+  const handleSubmit = async (e) => {
+    // Check if e exists (it will when called from form submission, but not from button click)
+    if (e && e.preventDefault) {
+      e.preventDefault()
+    }
+
+    setIsLoading(true)
+    setSaveSuccess(false)
+    setSaveError("")
+
+    try {
+      // Create user object with only the fields we want to update
+      const updatedUser = {
+        username: formData.username,
+        phoneNumber: formData.phoneNumber,
+        address: formData.address,
+        birthDate: formData.birthDate ? new Date(formData.birthDate).toISOString() : null,
+      }
+
+      // Send PATCH request to update profile
+      const response = await api.patch(`/users/profile/${currentUserId}`, updatedUser)
+
+      // Update local user state with response data
+      setUser(response.data)
+      setSaveSuccess(true)
+      setIsEditing(false)
+
+      // Show success message for 3 seconds
+      setTimeout(() => {
+        setSaveSuccess(false)
+      }, 3000)
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      setSaveError(error.response?.data || "Failed to update profile. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Update the button onClick handler to use a separate function
+  // This way we avoid the preventDefault issue when clicking the button
+  const handleButtonClick = () => {
+    if (isEditing) {
+      handleSubmit()
+    } else {
+      setIsEditing(true)
+    }
   }
 
   // Animation variants
@@ -98,9 +192,7 @@ const Profile = () => {
                   <Upload className="w-4 h-4" />
                 </button>
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-                {formData.firstName} {formData.lastName}
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{user.username || "User"}</h2>
               <p className="text-gray-500 dark:text-gray-400">Premium Member</p>
 
               <div className="flex justify-center mt-4 space-x-2">
@@ -198,12 +290,37 @@ const Profile = () => {
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
               <h2 className="text-xl font-bold text-gray-800 dark:text-white">Personal Information</h2>
               <button
-                onClick={() => (isEditing ? handleSubmit() : setIsEditing(true))}
+                onClick={handleButtonClick}
                 className={`flex items-center px-4 py-2 rounded-lg text-white ${
                   isEditing ? "bg-green-500 hover:bg-green-600" : "bg-teal-500 hover:bg-teal-600"
                 } transition-colors duration-200`}
+                disabled={isLoading}
               >
-                {isEditing ? (
+                {isLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : isEditing ? (
                   <>
                     <Save className="w-4 h-4 mr-2" />
                     Save Changes
@@ -217,41 +334,34 @@ const Profile = () => {
               </button>
             </div>
 
+            {/* Success and error messages */}
+            {saveSuccess && (
+              <div className="mx-6 mt-4 p-3 bg-green-100 border border-green-200 text-green-700 rounded-lg flex items-center">
+                <CheckCircle className="h-5 w-5 mr-2" />
+                Profile updated successfully!
+              </div>
+            )}
+
+            {saveError && (
+              <div className="mx-6 mt-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg flex items-center">
+                <AlertCircle className="h-5 w-5 mr-2" />
+                {saveError}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                {/* First Name */}
+                {/* Username */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <User className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                       type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      disabled={!isEditing}
-                      className={`block w-full pl-10 pr-3 py-2 rounded-lg ${
-                        isEditing
-                          ? "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                          : "bg-gray-100 dark:bg-gray-800 border-none"
-                      } text-gray-800 dark:text-white`}
-                    />
-                  </div>
-                </div>
-
-                {/* Last Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
+                      name="username"
+                      value={formData.username}
                       onChange={handleChange}
                       disabled={!isEditing}
                       className={`block w-full pl-10 pr-3 py-2 rounded-lg ${
@@ -276,13 +386,8 @@ const Profile = () => {
                       type="email"
                       name="email"
                       value={formData.email}
-                      onChange={handleChange}
-                      disabled={!isEditing}
-                      className={`block w-full pl-10 pr-3 py-2 rounded-lg ${
-                        isEditing
-                          ? "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                          : "bg-gray-100 dark:bg-gray-800 border-none"
-                      } text-gray-800 dark:text-white`}
+                      disabled={true} // Email should not be editable
+                      className="block w-full pl-10 pr-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border-none text-gray-800 dark:text-white"
                     />
                   </div>
                 </div>
@@ -298,8 +403,8 @@ const Profile = () => {
                     </div>
                     <input
                       type="tel"
-                      name="phone"
-                      value={formData.phone}
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
                       onChange={handleChange}
                       disabled={!isEditing}
                       className={`block w-full pl-10 pr-3 py-2 rounded-lg ${
@@ -307,28 +412,7 @@ const Profile = () => {
                           ? "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                           : "bg-gray-100 dark:bg-gray-800 border-none"
                       } text-gray-800 dark:text-white`}
-                    />
-                  </div>
-                </div>
-
-                {/* Address */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <MapPin className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      disabled={!isEditing}
-                      className={`block w-full pl-10 pr-3 py-2 rounded-lg ${
-                        isEditing
-                          ? "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                          : "bg-gray-100 dark:bg-gray-800 border-none"
-                      } text-gray-800 dark:text-white`}
+                      placeholder="+212 xxxxxxxxx"
                     />
                   </div>
                 </div>
@@ -354,23 +438,29 @@ const Profile = () => {
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Bio */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bio</label>
-                <textarea
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  rows={4}
-                  className={`block w-full px-3 py-2 rounded-lg ${
-                    isEditing
-                      ? "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                      : "bg-gray-100 dark:bg-gray-800 border-none"
-                  } text-gray-800 dark:text-white`}
-                ></textarea>
+                {/* Address */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <MapPin className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className={`block w-full pl-10 pr-3 py-2 rounded-lg ${
+                        isEditing
+                          ? "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                          : "bg-gray-100 dark:bg-gray-800 border-none"
+                      } text-gray-800 dark:text-white`}
+                      placeholder="Your full address"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Preferences section */}
@@ -428,8 +518,12 @@ const Profile = () => {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600">
-                    Save Changes
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               )}

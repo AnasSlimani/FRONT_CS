@@ -1,7 +1,11 @@
+"use client"
 import { Geist, Geist_Mono } from "next/font/google"
 import Navbar from "@/components/layout/Navbar"
 import Footer from "@/components/layout/Footer"
 import "./globals.css"
+import { usePathname } from 'next/navigation'
+
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,19 +17,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 })
 
-export const metadata = {
-  title: "Club Sportif",
-  description: "Plateforme de gestion de club sportif",
-}
+
 
 export default function RootLayout({ children }) {
+  
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith('/dashboardadmin');
+  
   return (
     <html lang="fr">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
+      <div className="flex flex-col min-h-screen">
+          {!isAdmin && <Navbar />}
           <main className="flex-grow pt-16">{children}</main>
-          <Footer />
+          {!isAdmin && <Footer />}
         </div>
       </body>
     </html>
