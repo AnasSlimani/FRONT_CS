@@ -45,7 +45,7 @@ const Content = ({ activeFilter }) => {
       result = result.filter((activity) => activity.type === "deplacement");
       setFilteredActivities(result);
     } else if (filter === "matchAmicaux") {
-      result = result.filter((activity) => activity.type === "MATCH_AMICAL");
+      result = result.filter((activity) => activity.type === "matchAmical");
     }
     setFilteredActivities(result);
   };

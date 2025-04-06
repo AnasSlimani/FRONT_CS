@@ -1,137 +1,114 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
+import { jwtDecode } from "jwt-decode"
+import api from "@/app/api/axios"
 import { Calendar, MapPin, Clock, Users, Trophy, Filter, ChevronDown, CheckCircle2, XCircle, Eye } from "lucide-react"
 
-// Sample activities data
-const activitiesData = [
-  {
-    id: 1,
-    title: "Football Tournament 2023",
-    description: "Annual football tournament between local clubs.",
-    date: "Oct 15, 2023",
-    time: "14:00 - 18:00",
-    location: "Main Stadium",
-    image: "/images/billard.jpg",
-    category: "Tournament",
-    type: "tournament",
-    status: "upcoming",
-    registered: true,
-    participants: 120,
-  },
-  {
-    id: 2,
-    title: "Basketball Championship",
-    description: "Regional basketball championship with teams from all over the region.",
-    date: "Oct 22, 2023",
-    time: "10:00 - 16:00",
-    location: "Indoor Sports Hall",
-    image: "/images/billard.jpg",
-    category: "Tournament",
-    type: "tournament",
-    status: "upcoming",
-    registered: true,
-    participants: 80,
-  },
-  {
-    id: 3,
-    title: "Billard Masters",
-    description: "Professional billard competition with cash prizes and trophies for winners.",
-    date: "Nov 5, 2023",
-    time: "18:00 - 22:00",
-    location: "Club Lounge",
-    image: "/images/billard.jpg",
-    category: "Tournament",
-    type: "tournament",
-    status: "upcoming",
-    registered: false,
-    participants: 32,
-  },
-  {
-    id: 4,
-    title: "National Championship Trip",
-    description: "Club trip to support our team at the National Championship finals in Paris.",
-    date: "Nov 12, 2023",
-    time: "08:00 - 20:00",
-    location: "Paris National Stadium",
-    image: "/images/billard.jpg",
-    category: "Trip",
-    type: "trip",
-    status: "upcoming",
-    registered: true,
-    participants: 45,
-  },
-  {
-    id: 5,
-    title: "Regional Competition Travel",
-    description: "Travel to the neighboring city for the regional competition.",
-    date: "Nov 19, 2023",
-    time: "09:00 - 18:00",
-    location: "Regional Sports Center",
-    image: "/images/billard.jpg",
-    category: "Trip",
-    type: "trip",
-    status: "upcoming",
-    registered: false,
-    participants: 30,
-  },
-  {
-    id: 6,
-    title: "Seniors vs Juniors Match",
-    description: "Friendly match between our senior and junior teams.",
-    date: "Sep 26, 2023",
-    time: "16:00 - 18:00",
-    location: "Club Field",
-    image: "/images/billard.jpg",
-    category: "Match",
-    type: "match",
-    status: "completed",
-    registered: true,
-    result: "Win",
-    participants: 40,
-  },
-  {
-    id: 7,
-    title: "Inter-Department Tournament",
-    description: "Friendly tournament between different departments of our club.",
-    date: "Aug 3, 2023",
-    time: "13:00 - 17:00",
-    location: "Club Grounds",
-    image: "/images/billard.jpg",
-    category: "Tournament",
-    type: "tournament",
-    status: "completed",
-    registered: true,
-    result: "2nd Place",
-    participants: 60,
-  },
-  {
-    id: 8,
-    title: "Veterans Exhibition Match",
-    description: "Special exhibition match featuring veteran players from our club's history.",
-    date: "Jul 10, 2023",
-    time: "15:00 - 17:00",
-    location: "Main Stadium",
-    image: "/images/billard.jpg",
-    category: "Match",
-    type: "match",
-    status: "completed",
-    registered: true,
-    result: "Draw",
-    participants: 25,
-  },
-]
-
 const Activities = () => {
+  // State for user and activities
+  const [currentUserId, setCurrentUserId] = useState(null)
+  const [activities, setActivities] = useState([])
+  const [userTeams, setUserTeams] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+
   // State for filters
   const [activeFilter, setActiveFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
+  // Get current user ID from token
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (token) {
+      try {
+        const decoded = jwtDecode(token)
+        setCurrentUserId(decoded.id)
+      } catch (error) {
+        console.error("Error decoding token:", error)
+        setError("Failed to authenticate user")
+      }
+    } else {
+      setError("You must be logged in to view your activities")
+    }
+  }, [])
+
+  // Fetch user's teams when user ID is available
+  useEffect(() => {
+    const fetchUserTeams = async () => {
+      if (!currentUserId) return
+
+      try {
+        const response = await api.get(`/teams/member/${currentUserId}`)
+        setUserTeams(response.data)
+      } catch (error) {
+        console.error("Error fetching user teams:", error)
+      }
+    }
+
+    fetchUserTeams()
+  }, [currentUserId])
+
+  // Fetch all activities and filter for user participation
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (!currentUserId) return
+
+      setIsLoading(true)
+      try {
+        // Fetch all activities
+        const response = await api.get("/activities")
+        const allActivities = response.data
+
+        // Filter activities where user is participating
+        const userActivities = allActivities.filter((activity) => {
+          // Check if user is in individual participants
+          const isIndividualParticipant =
+            activity.individualParticipants &&
+            activity.individualParticipants.some((participant) => participant.id === currentUserId)
+
+          // Check if user is in a team that's participating
+          const isTeamParticipant =
+            activity.teamParticipants &&
+            userTeams.length > 0 &&
+            activity.teamParticipants.some((team) => userTeams.some((userTeam) => userTeam.id === team.id))
+
+          return isIndividualParticipant || isTeamParticipant
+        })
+
+        // Format activities for display
+        const formattedActivities = userActivities.map((activity) => ({
+          id: activity.id,
+          title: activity.name,
+          description: activity.description,
+          date: activity.date ? new Date(activity.date).toLocaleDateString() : "TBD",
+          time: activity.time || "TBD",
+          location: activity.localisation,
+          image: activity.image ? `/images/${activity.image}` : "/images/billard.jpg",
+          category: activity.type.charAt(0).toUpperCase() + activity.type.slice(1),
+          type: activity.type,
+          status: new Date(activity.date) > new Date() ? "upcoming" : "completed",
+          registered: true, // User is always registered for these activities
+          participants: activity.nbrParticipants || 0,
+        }))
+
+        setActivities(formattedActivities)
+      } catch (error) {
+        console.error("Error fetching activities:", error)
+        setError("Failed to load activities")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchActivities()
+  }, [currentUserId, userTeams])
+
   // Filter activities based on selected filters
-  const filteredActivities = activitiesData.filter((activity) => {
+  const filteredActivities = activities.filter((activity) => {
     // Filter by type
     const typeMatch = activeFilter === "all" || activity.type === activeFilter
 
@@ -161,13 +138,18 @@ const Activities = () => {
     },
   }
 
+  // Handle view details click
+  const handleViewDetails = (activityId) => {
+    window.location.href = `/activities/${activityId}`
+  }
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto">
       {/* Header section */}
       <motion.div variants={itemVariants} className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white">My Activities</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">Manage your tournaments, trips, and matches</p>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">View activities you're participating in</p>
         </div>
 
         {/* Filter button for mobile */}
@@ -200,8 +182,8 @@ const Activities = () => {
                     {[
                       { id: "all", label: "All Activities" },
                       { id: "tournament", label: "Tournaments" },
-                      { id: "trip", label: "Trips" },
-                      { id: "match", label: "Matches" },
+                      { id: "deplacement", label: "Trips" },
+                      { id: "matchAmical", label: "Matches" },
                     ].map((filter) => (
                       <button
                         key={filter.id}
@@ -256,8 +238,8 @@ const Activities = () => {
           {[
             { id: "all", label: "All Activities" },
             { id: "tournament", label: "Tournaments" },
-            { id: "trip", label: "Trips" },
-            { id: "match", label: "Matches" },
+            { id: "deplacement", label: "Trips" },
+            { id: "matchAmical", label: "Matches" },
           ].map((filter) => (
             <button
               key={filter.id}
@@ -294,8 +276,30 @@ const Activities = () => {
         </div>
       </motion.div>
 
+      {/* Loading state */}
+      {isLoading && (
+        <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center">
+          <div className="flex flex-col items-center">
+            <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Loading activities...</h3>
+            <p className="text-gray-600 dark:text-gray-400">Please wait while we fetch your activities.</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Error state */}
+      {error && !isLoading && (
+        <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center">
+          <div className="flex flex-col items-center">
+            <XCircle className="w-16 h-16 text-red-500 mb-4" />
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Error</h3>
+            <p className="text-gray-600 dark:text-gray-400">{error}</p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Activities grid */}
-      {filteredActivities.length > 0 ? (
+      {!isLoading && !error && filteredActivities.length > 0 ? (
         <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredActivities.map((activity, index) => (
             <motion.div
@@ -330,7 +334,7 @@ const Activities = () => {
                     className={`px-3 py-1 text-xs font-medium rounded-full ${
                       activity.type === "tournament"
                         ? "bg-yellow-500 text-white"
-                        : activity.type === "trip"
+                        : activity.type === "deplacement"
                           ? "bg-purple-500 text-white"
                           : "bg-green-500 text-white"
                     }`}
@@ -341,17 +345,10 @@ const Activities = () => {
 
                 {/* Registration status */}
                 <div className="absolute bottom-4 left-4">
-                  {activity.registered ? (
-                    <span className="flex items-center px-3 py-1 bg-green-500/80 text-white text-xs font-medium rounded-full">
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                      Registered
-                    </span>
-                  ) : activity.status === "upcoming" ? (
-                    <span className="flex items-center px-3 py-1 bg-gray-500/80 text-white text-xs font-medium rounded-full">
-                      <XCircle className="w-3 h-3 mr-1" />
-                      Not Registered
-                    </span>
-                  ) : null}
+                  <span className="flex items-center px-3 py-1 bg-green-500/80 text-white text-xs font-medium rounded-full">
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    Registered
+                  </span>
                 </div>
               </div>
 
@@ -390,36 +387,27 @@ const Activities = () => {
 
                 {/* Action button */}
                 <button
-                  className={`w-full py-2 rounded-lg font-medium flex items-center justify-center ${
-                    activity.status === "upcoming" && !activity.registered
-                      ? "bg-teal-600 hover:bg-teal-700 text-white"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
+                  className="w-full py-2 rounded-lg font-medium flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600"
+                  onClick={() => handleViewDetails(activity.id)}
                 >
-                  {activity.status === "upcoming" && !activity.registered ? (
-                    <>Register Now</>
-                  ) : (
-                    <>
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
-                    </>
-                  )}
+                  <Eye className="w-4 h-4 mr-2" />
+                  View Details
                 </button>
               </div>
             </motion.div>
           ))}
         </motion.div>
-      ) : (
+      ) : !isLoading && !error ? (
         <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center">
           <div className="flex flex-col items-center">
             <Calendar className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">No activities found</h3>
             <p className="text-gray-600 dark:text-gray-400">
-              Try changing your filters or check back later for new activities.
+              You are not participating in any activities that match your current filters.
             </p>
           </div>
         </motion.div>
-      )}
+      ) : null}
     </motion.div>
   )
 }
