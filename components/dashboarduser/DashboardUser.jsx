@@ -7,15 +7,40 @@ import Dashboard from "./Dashboard"
 import Activities from "./Activities"
 import Chat from "./Chat"
 import Profile from "./Profile"
+import { jwtDecode } from "jwt-decode"
+import api from "@/app/api/axios"
 
 const DashboardUser = () => {
   const [activeTab, setActiveTab] = useState("dashboard")
   const [isMounted, setIsMounted] = useState(false)
-
+  const [user, setUser] = useState({})
+  const [currentUserId, setCurrentUserId] = useState(null)
   // Add this useEffect to handle client-side mounting
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token")
+          if (token) {
+            try {
+              const decoded = jwtDecode(token)
+              setCurrentUserId(decoded.id)
+            } catch (error) {
+              console.error("Error decoding token:", error)
+            }
+          } 
+      try {
+        const response = await api.get(`/users/${currentUserId}`)
+        setUser(response.data)
+      } catch (error) {
+        console.error("Error fetching user:", error)
+      }
+    }
+
+    fetchUser()
+  }, [currentUserId])
 
   // Animation variants for page transitions
   const pageVariants = {
@@ -54,9 +79,9 @@ const DashboardUser = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans mt-2">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans mt-18">
       {/* Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
 
       {/* Main Content */}
       <motion.main

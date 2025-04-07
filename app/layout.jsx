@@ -4,6 +4,7 @@ import Navbar from "@/components/layout/Navbar"
 import Footer from "@/components/layout/Footer"
 import "./globals.css"
 import { usePathname } from 'next/navigation'
+import { MessageModalProvider } from "@/components/ui/message-modal-provider"
 
 
 
@@ -29,7 +30,7 @@ export default function RootLayout({ children }) {
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
       <div className="flex flex-col min-h-screen">
           {!isAdmin && <Navbar />}
-          <main className="flex-grow pt-16">{children}</main>
+          <main className="flex-grow pt-0"><MessageModalProvider>{children}</MessageModalProvider></main>
           {!isAdmin && <Footer />}
         </div>
       </body>

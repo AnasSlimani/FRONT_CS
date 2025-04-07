@@ -38,7 +38,7 @@ export function Test() {
     setIsLoading(true)
 
     // Basic validation
-    if (!formData.username ||  !formData.email || !formData.password) {
+    if (!formData.username || !formData.email || !formData.password) {
       setError("All fields are required")
       setIsLoading(false)
       return
@@ -57,9 +57,10 @@ export function Test() {
         email: formData.email,
         password: formData.password,
         role: "USER", // Default role
+        registrationDate: new Date(), // Add registration date
+        contributed: false, // Initialize as not contributed
+        profilePicture: null, // Initialize with null profile picture
       }
-      console.log(user);
-      
 
       // Send request to create user
       const response = await api.post("/users", user, { public: true })
@@ -133,40 +134,36 @@ export function Test() {
   }
 
   // Handle Google Sign-In response
-const handleGoogleSignIn = async (response) => {
-  try {
-    setIsLoading(true);
-    setError("");
+  const handleGoogleSignIn = async (response) => {
+    try {
+      setIsLoading(true)
+      setError("")
 
-    // Decode the JWT token to get user information
-    const decodedToken = parseJwt(response.credential);
-    console.log("Google user info:", decodedToken);
+      // Decode the JWT token to get user information
+      const decodedToken = parseJwt(response.credential)
+      console.log("Google user info:", decodedToken)
 
-    // Créer une requête pour l'authentification Google
-    const googleAuthData = {
-      email: decodedToken.email,
-      googleId: decodedToken.sub,
-      name: `${decodedToken.given_name} ${decodedToken.family_name}`
-    };
+      // Create a request for Google authentication
+      const googleAuthData = {
+        email: decodedToken.email,
+        googleId: decodedToken.sub,
+        name: `${decodedToken.given_name} ${decodedToken.family_name}`,
+      }
 
-    // Utiliser directement l'endpoint Google Login qui gère à la fois la connexion et l'inscription
-    const loginResponse = await api.post(
-      "users/google-login",
-      googleAuthData,
-      { public: true }
-    );
+      // Use the Google Login endpoint directly
+      const loginResponse = await api.post("users/google-login", googleAuthData, { public: true })
 
-    // Stocker le token et rediriger
-    localStorage.setItem("token", loginResponse.data);
-    setSuccess(true);
-    window.location.href = "/";
-  } catch (error) {
-    console.error("Error with Google Sign-In:", error);
-    setError(error.response?.data || "Failed to sign up with Google. Please try again.");
-  } finally {
-    setIsLoading(false);
+      // Store the token and redirect
+      localStorage.setItem("token", loginResponse.data)
+      setSuccess(true)
+      window.location.href = "/"
+    } catch (error) {
+      console.error("Error with Google Sign-In:", error)
+      setError(error.response?.data || "Failed to sign up with Google. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
-};
 
   // Helper function to decode JWT token
   const parseJwt = (token) => {

@@ -3,7 +3,9 @@ import Shop from '@/components/shop/Shop'
 
 const page = () => {
   return (
-    <Shop />
+    <div className='mt-17'>
+      <Shop />
+    </div>
   )
 }
 
