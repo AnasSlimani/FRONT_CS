@@ -303,11 +303,14 @@ const TeamCreationModal = ({ isOpen, onClose, activityTitle, nbrParticipant, act
       captain: { id: userID },
       members: members.map((member) => ({ id: member.id })),
     }
-
+    
     try {
-      const response = await api.post(`/teams/${activityID}`, team)
+      const response = await api.post(`/activities/${activityID}/team`, team)
       if (response.status === 200) {
+        console.log(response.data);
         setFormSuccess(true)
+        window.location.href = "/activities"
+
       }
     } catch (error) {
       console.error("Error creating team:", error)

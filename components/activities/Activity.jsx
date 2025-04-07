@@ -186,7 +186,7 @@ const Activity = ({ activity }) => {
           message="Your place is reserved successfully!"
         />
       );
-    }
+    } 
 
     // Default case
     return (

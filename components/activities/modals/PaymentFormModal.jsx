@@ -13,34 +13,22 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
   const [formSuccess, setFormSuccess] = useState(false)
   let userID ;
   let roleToken; 
+
   const [formData, setFormData] = useState({
-    type: "INDIVIDUAL",
-    participant: {
       id: "",
       role : "",
       idCard: "",
-    }
   })
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // Check if the field is in the participant object
-    if (name in formData.participant) {
-      setFormData(prev => ({
-        ...prev,
-        participant: {
-          ...prev.participant,
-          [name]: value
-        }
-      }));
-    } else {
+        
       // For top-level fields (though you don't have any in your current form)
       setFormData(prev => ({
         ...prev,
         [name]: value
       }));
-    }
+    
 
   }
 
@@ -52,12 +40,11 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
           // userID = decoded.id;
           // roleToken = decoded.role;
           setFormData({
-            type: "INDIVIDUAL",
-            participant: {
+          
               id: decoded.id,
               role : decoded.role,
               idCard: "",
-            }
+            
 
           })
         } catch (error) {
@@ -73,7 +60,7 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
     setFormError("")
 
    
-    if (!formData.participant.idCard.trim()) {
+    if (!formData.idCard.trim()) {
       setFormError("ID card number is required")
       return
     }
@@ -88,7 +75,7 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
     try {
       
 
-      const response = await api.post(`/activities/${activityID}/participants`, formData);      
+      const response = await api.post(`/activities/${activityID}/individual`, formData);      
 
       const status = response.status;
       if(status === 200){
@@ -108,12 +95,10 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
         onClose()
         // Reset form
         setFormData({
-          type: "INDIVIDUAL",
-          participant: {
             id: "",
             role : "",
             idCard: "",
-        }
+        
       })
 
         setFormSuccess(false)
@@ -163,7 +148,7 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
                 type="text"
                 id="idCard"
                 name="idCard"
-                value={formData.participant.idCard}
+                value={formData.idCard}
                 onChange={handleChange}
                 className="bg-white border border-gray-300 text-gray-800 placeholder-gray-400 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full pl-10 p-3 shadow-sm"
                 placeholder="Enter your ID card number"
