@@ -1,9 +1,53 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Trophy, Users, Calendar, TrendingUp, Award, Clock, Activity, BarChart3 } from "lucide-react"
+import { Trophy, Users, Calendar, TrendingUp, Award, Clock, Activity, BarChart3, AlertCircle } from 'lucide-react'
+import { jwtDecode } from "jwt-decode"
+import api from "@/app/api/axios"
+import { useRouter } from "next/navigation"
 
 const Dashboard = () => {
+  const router = useRouter()
+  const [username, setUsername] = useState("User")
+  const [trialStatus, setTrialStatus] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Get user info from token
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (token) {
+      try {
+        const decoded = jwtDecode(token)
+        
+        // Fetch user data and trial status
+        const fetchUserData = async () => {
+          try {
+            setIsLoading(true)
+            const response = await api.get(`/users/${decoded.id}`)
+            setUsername(response.data.username || "User")
+            
+            // Check trial status
+            const trialResponse = await api.get(`/users/trial-status/${decoded.id}`)
+            setTrialStatus(trialResponse.data)
+          } catch (error) {
+            console.error("Error fetching user data:", error)
+          } finally {
+            setIsLoading(false)
+          }
+        }
+        
+        fetchUserData()
+      } catch (error) {
+        console.error("Error decoding token:", error)
+        setIsLoading(false)
+      }
+    } else {
+      // Redirect to login if no token
+      router.push("/")
+    }
+  }, [router])
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -22,6 +66,19 @@ const Dashboard = () => {
       opacity: 1,
       transition: { duration: 0.5, ease: "easeOut" },
     },
+  }
+
+  // Handle payment button click
+  const handlePaymentClick = () => {
+    router.push("/payment")
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+      </div>
+    )
   }
 
   // Sample data for statistics
@@ -80,10 +137,48 @@ const Dashboard = () => {
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto">
+      {/* Trial notification banner */}
+      {trialStatus && !trialStatus.isContributed && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-md shadow-md"
+        >
+          <div className="flex items-start">
+            <AlertCircle className="h-6 w-6 text-amber-500 mr-3 mt-0.5" />
+            <div className="flex-1">
+              {trialStatus.status === "trial" ? (
+                <>
+                  <h3 className="text-lg font-medium text-amber-800">Your free trial is active</h3>
+                  <p className="text-amber-700 mb-2">
+                    You have <span className="font-bold">{trialStatus.daysRemaining} days</span> remaining in your free trial. 
+                    Complete your membership payment to continue accessing all features after your trial ends.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-medium text-red-800">Your trial has expired</h3>
+                  <p className="text-red-700 mb-2">
+                    Your free trial period has ended. Please complete your membership payment to continue 
+                    accessing all features and to prevent your account from being deleted.
+                  </p>
+                </>
+              )}
+              <button 
+                onClick={handlePaymentClick}
+                className="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors"
+              >
+                Complete Membership Payment
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Welcome section */}
       <motion.div variants={itemVariants} className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white">
-          Welcome back, <span className="text-teal-600">John!</span>
+          Welcome back, <span className="text-teal-600">{username}!</span>
         </h1>
         <p className="text-gray-600 dark:text-gray-300 mt-2">
           Here's what's happening with your sporting activities today.
@@ -302,4 +397,3 @@ const Dashboard = () => {
 }
 
 export default Dashboard
-

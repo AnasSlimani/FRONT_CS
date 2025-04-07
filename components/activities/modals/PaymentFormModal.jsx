@@ -12,15 +12,24 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
   const [formError, setFormError] = useState("")
   const [formSuccess, setFormSuccess] = useState(false)
   let userID ;
+  let roleToken; 
+
   const [formData, setFormData] = useState({
-    id: "",
-    role : "",
-    idCard: "",
+      id: "",
+      role : "",
+      idCard: "",
   })
 
-  const handleChange =  (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+        
+      // For top-level fields (though you don't have any in your current form)
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    
+
   }
 
   useEffect(() => {
@@ -28,13 +37,15 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
       if (token) {
         try {
           const decoded = jwtDecode(token)
-          userID = decoded.id;
-          roleToken = decoded.role;
-          console.log(userID);
+          // userID = decoded.id;
+          // roleToken = decoded.role;
           setFormData({
-            id:userID,
-            role: roleToken,
-            idCard: "",
+          
+              id: decoded.id,
+              role : decoded.role,
+              idCard: "",
+            
+
           })
         } catch (error) {
           console.error("Error decoding token:", error)
@@ -63,10 +74,12 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
 
     try {
       
-      const response = await api.post(`/activities/${activityID}/participants`,formData);
+
+      const response = await api.post(`/activities/${activityID}/individual`, formData);      
+
       const status = response.status;
       if(status === 200){
-        alert("Reservation completed");
+        setFormSuccess(true)
       }
     } catch (error) {
       console.log(error );
@@ -76,15 +89,18 @@ const PaymentFormModal = ({ isOpen, onClose, activityTitle , activityID }) => {
 
     setTimeout(() => {
       setIsSubmitting(false)
-      setFormSuccess(true)
 
       // Close modal after success message
       setTimeout(() => {
         onClose()
         // Reset form
         setFormData({
-          idCard: ""
-        })
+            id: "",
+            role : "",
+            idCard: "",
+        
+      })
+
         setFormSuccess(false)
       }, 2000)
     }, 1500)

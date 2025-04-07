@@ -12,7 +12,7 @@ const teams = [
   { id: 3, name: "Billard Masters", image: "/images/logo.png" },
 ]
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
+const Sidebar = ({ activeTab, setActiveTab ,user}) => {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -95,7 +95,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
                 <div className="relative w-24 h-24 mb-4">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 animate-pulse"></div>
                   <Image
-                    src="/images/anas.jpg"
+                    src={user.profilePicture}
                     alt="User Profile"
                     width={96}
                     height={96}

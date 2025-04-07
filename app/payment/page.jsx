@@ -1,13 +1,15 @@
-import Payment from "@/components/payment/Payment"
+import PaymentForm from "@/components/payment/PaymentForm"
 
 export const metadata = {
-  title: "Membership Payment - Club Sportif",
-  description: "Complete your Club Sportif membership registration and payment",
+  title: "Adhésion Club Sportif - Paiement",
+  description: "Complétez votre paiement d'adhésion pour accéder à toutes les fonctionnalités du club",
 }
 
-const PaymentPage = () => {
-  return <Payment />
+export default function PaymentPage() {
+  return (
+    <div className="mt-16 min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      <PaymentForm />
+    </div>
+  )
 }
-
-export default PaymentPage
 

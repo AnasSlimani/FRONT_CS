@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { jwtDecode } from "jwt-decode"
 import api from "@/app/api/axios"
+import { uploadImage } from "@/app/api/upload"
 import Image from "next/image"
 import {
   User,
@@ -13,7 +14,6 @@ import {
   Calendar,
   Edit,
   Save,
-  Upload,
   Shield,
   Award,
   Clock,
@@ -21,6 +21,8 @@ import {
   Trophy,
   Users,
   AlertCircle,
+  Camera,
+  X,
 } from "lucide-react"
 
 const Profile = () => {
@@ -42,6 +44,12 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState("")
+
+  // State for profile picture upload
+  const [isUploadingPicture, setIsUploadingPicture] = useState(false)
+  const [pictureError, setPictureError] = useState("")
+  const [previewImage, setPreviewImage] = useState(null)
+  const fileInputRef = useRef(null)
 
   // Get current user ID from token
   useEffect(() => {
@@ -94,6 +102,71 @@ const Profile = () => {
       ...prev,
       [name]: value,
     }))
+  }
+
+  // Handle profile picture click
+  const handleProfilePictureClick = () => {
+    fileInputRef.current.click()
+  }
+
+  // Handle profile picture change
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Check file type
+    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    if (!validTypes.includes(file.type)) {
+      setPictureError("Please select a valid image file (JPEG, PNG, GIF, WEBP)")
+      return
+    }
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setPictureError("Image size should be less than 5MB")
+      return
+    }
+
+    try {
+      setIsUploadingPicture(true)
+      setPictureError("")
+
+      // Generate preview
+      const reader = new FileReader()
+      reader.onload = () => {
+        setPreviewImage(reader.result)
+      }
+      reader.readAsDataURL(file)
+
+      // Upload image and get URL
+      const imageUrl = await uploadImage(file)
+
+      // Update user profile picture in the database
+      await api.patch(`/users/profile/${currentUserId}/picture`, { profilePicture: imageUrl })
+
+      // Update local user state
+      setUser((prev) => ({
+        ...prev,
+        profilePicture: imageUrl,
+      }))
+
+      // Show success message
+      setSaveSuccess(true)
+      setTimeout(() => {
+        setSaveSuccess(false)
+      }, 3000)
+    } catch (error) {
+      console.error("Error uploading profile picture:", error)
+      setPictureError("Failed to upload profile picture. Please try again.")
+    } finally {
+      setIsUploadingPicture(false)
+    }
+  }
+
+  // Cancel profile picture upload
+  const handleCancelUpload = () => {
+    setPreviewImage(null)
+    setPictureError("")
   }
 
   // Update the handleSubmit function to properly handle both form submission and button click
@@ -166,6 +239,9 @@ const Profile = () => {
     },
   }
 
+  // Default profile picture
+  const defaultProfilePicture = "/images/default-avatar.png"
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto">
       <motion.div variants={itemVariants} className="mb-8">
@@ -179,19 +255,71 @@ const Profile = () => {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
             {/* Profile image and basic info */}
             <div className="p-6 text-center border-b border-gray-200 dark:border-gray-700">
-              <div className="relative w-32 h-32 mx-auto mb-4">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 animate-pulse"></div>
-                <Image
-                  src="/images/badr.jpg"
-                  alt="Profile"
-                  width={128}
-                  height={128}
-                  className="rounded-full border-4 border-white dark:border-gray-800 object-cover relative z-10"
-                />
-                <button className="absolute bottom-0 right-0 bg-teal-500 text-white p-2 rounded-full shadow-lg hover:bg-teal-600 transition-colors duration-200">
-                  <Upload className="w-4 h-4" />
-                </button>
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleProfilePictureChange}
+              />
+
+              <div className="relative w-32 h-32 mx-auto mb-4 group">
+                {isUploadingPicture && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full z-20">
+                    <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+
+                {previewImage ? (
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 animate-pulse"></div>
+                    <Image
+                      src={previewImage || "/placeholder.svg"}
+                      alt="Profile Preview"
+                      width={128}
+                      height={128}
+                      className="rounded-full border-4 border-white dark:border-gray-800 object-cover relative z-10"
+                    />
+                    <button
+                      onClick={handleCancelUpload}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg hover:bg-red-600 transition-colors duration-200 z-20"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 animate-pulse"></div>
+                    <Image
+                      src={user.profilePicture || defaultProfilePicture}
+                      alt="Profile"
+                      width={128}
+                      height={128}
+                      className="rounded-full border-4 border-white dark:border-gray-800 object-cover relative z-10"
+                    />
+                    <button
+                      onClick={handleProfilePictureClick}
+                      className="absolute bottom-0 right-0 bg-teal-500 text-white p-2 rounded-full shadow-lg hover:bg-teal-600 transition-colors duration-200 z-20"
+                      disabled={isUploadingPicture}
+                    >
+                      <Camera className="w-4 h-4" />
+                    </button>
+
+                    {/* Hover overlay */}
+                    <div
+                      className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer z-10"
+                      onClick={handleProfilePictureClick}
+                    >
+                      <div className="text-white text-sm font-medium">Change Photo</div>
+                    </div>
+                  </>
+                )}
               </div>
+
+              {/* Error message for profile picture upload */}
+              {pictureError && <div className="mt-2 text-sm text-red-500">{pictureError}</div>}
+
               <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{user.username || "User"}</h2>
               <p className="text-gray-500 dark:text-gray-400">Premium Member</p>
 
