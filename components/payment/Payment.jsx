@@ -148,7 +148,7 @@ const Payment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 mt-16">
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-teal-600 to-teal-500 text-white py-16">
         <div className="absolute inset-0 overflow-hidden">

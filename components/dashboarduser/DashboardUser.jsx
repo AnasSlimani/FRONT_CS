@@ -54,7 +54,7 @@ const DashboardUser = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans mt-2">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans mt-18">
       {/* Sidebar */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
