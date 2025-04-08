@@ -63,41 +63,64 @@ const Activity = ({ activity }) => {
   };
 
   // Check if user is already participating in this activity
-  const checkUserParticipation = async (userId) => {
-    if (!userId) return false;
+const checkUserParticipation = async (userId, activity, api, setIsCheckingParticipation, setParticipationTeam) => {
+  if (!userId) return false
 
-    setIsCheckingParticipation(true);
-    try {
-      // Get teams where this user is a member
-      const teamsResponse = await api.get(`/teams/member/${userId}`);
-      const userTeams = teamsResponse.data;
+  setIsCheckingParticipation(true)
+  try {
+    // Get the activity to check its participants
+    const activityResponse = await api.get(`/activities/${activity.id}`)
+    const activityData = activityResponse.data
 
-      // Get the activity to check its team participants
-      const activityResponse = await api.get(`/activities/${activity.id}`);
-      const activityData = activityResponse.data;
+    if (activity.type === "tournament") {
+      // For billard tournaments, check individual participation
+      if (activity.sport === "billard") {
+        if (
+          activityData.individualParticipants &&
+          activityData.individualParticipants.some((participant) => participant.id === userId)
+        ) {
+          console.log("User is already participating in this billard tournament as individual")
+          return true
+        }
+      } else {
+        // For other tournaments (football, basketball), check team participation
+        // Get teams where this user is a member
+        const teamsResponse = await api.get(`/teams/member/${userId}`)
+        const userTeams = teamsResponse.data
 
-      // Check if any of the user's teams are already participating in this activity
-      const participatingTeam = userTeams.find(
-        (team) =>
-          activityData.teamParticipants &&
-          activityData.teamParticipants.some(
-            (participantTeam) => participantTeam.id === team.id
-          )
-      );
+        // Check if any of the user's teams are already participating in this activity
+        const participatingTeam = userTeams.find(
+          (team) =>
+            activityData.teamParticipants &&
+            activityData.teamParticipants.some((participantTeam) => participantTeam.id === team.id),
+        )
 
-      if (participatingTeam) {
-        setParticipationTeam(participatingTeam);
-        return true;
+        if (participatingTeam) {
+          setParticipationTeam(participatingTeam)
+          return true
+        }
       }
-
-      return false;
-    } catch (error) {
-      console.error("Error checking user participation:", error);
-      return false;
-    } finally {
-      setIsCheckingParticipation(false);
+    } else {
+      // For non-tournament activities (deplacement, matchAmical, etc.), check individual participation
+      if (
+        activityData.individualParticipants &&
+        activityData.individualParticipants.some((participant) => participant.id === userId)
+      ) {
+        console.log("User is already participating in this activity as individual")
+        return true
+      }
     }
-  };
+
+    return false
+  } catch (error) {
+    console.error("Error checking user participation:", error)
+    return false
+  } finally {
+    setIsCheckingParticipation(false)
+  }
+}
+
+
 
   const handleCheckLogin = async () => {
     const token = localStorage.getItem("token");
@@ -109,7 +132,13 @@ const Activity = ({ activity }) => {
 
     // If user is logged in, check if they're already participating
     if (currentUserId) {
-      const isParticipating = await checkUserParticipation(currentUserId);
+      const isParticipating = await checkUserParticipation(
+        currentUserId,
+        activity,
+        api,
+        setIsCheckingParticipation,
+        setParticipationTeam
+      );
 
       if (isParticipating) {
         setIsAlreadyParticipating(true);
@@ -162,6 +191,7 @@ const Activity = ({ activity }) => {
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             activityTitle={activity.name}
+            activityId={activity.id}
             message="Your place is reserved successfully! We will alert you when the tournament begins."
           />
         );
@@ -181,6 +211,7 @@ const Activity = ({ activity }) => {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           activityTitle={activity.name}
+          activityId={activity.id}
           message="Your place is reserved successfully!"
         />
       );
@@ -192,6 +223,7 @@ const Activity = ({ activity }) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         activityTitle={activity.name}
+        activityId={activity.id}
         message="Thank you for your interest in this activity!"
       />
     );
