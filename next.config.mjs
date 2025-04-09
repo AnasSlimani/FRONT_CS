@@ -4,7 +4,7 @@ const nextConfig = {
     emotion: true,
   },
   images: {
-    domains: ["images.unsplash.com", "assets.aceternity.com"],
+    domains: ["images.unsplash.com", "assets.aceternity.com",'example.com'],
   },
 };
 
