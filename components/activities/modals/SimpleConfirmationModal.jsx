@@ -1,16 +1,76 @@
 "use client"
 
-import { useState } from "react"
-import { Check, AlertCircle } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Check, AlertCircle, Loader } from "lucide-react"
 import ModalWrapper from "./ModalWrapper"
+import { jwtDecode } from "jwt-decode"
+import api from "@/app/api/axios"
 
-const SimpleConfirmationModal = ({ isOpen, onClose, activityTitle, message }) => {
+const SimpleConfirmationModal = ({ isOpen, onClose, activityTitle, message, activityId }) => {
   // Add state to track whether the user has confirmed
   const [isConfirmed, setIsConfirmed] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState("")
+  const [userId, setUserId] = useState(null)
+  const [userRole, setUserRole] = useState(null)
 
-  // Handle confirmation
-  const handleConfirm = () => {
-    setIsConfirmed(true)
+  // Get user ID from token when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const token = localStorage.getItem("token")
+      if (token) {
+        try {
+          const decoded = jwtDecode(token)
+          setUserId(decoded.id)
+          setUserRole(decoded.role)
+        } catch (error) {
+          console.error("Error decoding token:", error)
+          setError("Authentication error. Please try logging in again.")
+        }
+      }
+    }
+  }, [isOpen])
+
+  // Handle confirmation and API call
+  const handleConfirm = async () => {
+    if (!userId) {
+      setError("You must be logged in to participate")
+      return
+    }
+
+    if (!activityId) {
+      setError("Activity ID is missing. Please try again.")
+      console.error("Activity ID is undefined:", activityId)
+      return
+    }
+
+    setIsSubmitting(true)
+    setError("")
+
+    try {
+      console.log("Submitting participation for activity:", activityId)
+
+      // Create user object to send to backend
+      const userData = {
+        id: userId,
+        role: userRole,
+        idCard: "", // Not required for billard tournaments and friendly matches
+      }
+
+      // Make API call to add user as individual participant
+      const response = await api.post(`/activities/${activityId}/individual`, userData)
+
+      if (response.status === 200) {
+        setIsConfirmed(true)
+      } else {
+        throw new Error("Failed to register participation")
+      }
+    } catch (error) {
+      console.error("Error registering participation:", error)
+      setError(error.response?.data || "Failed to register participation. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // Handle close and reset state
@@ -19,6 +79,7 @@ const SimpleConfirmationModal = ({ isOpen, onClose, activityTitle, message }) =>
     // Reset the confirmation state after modal is closed
     setTimeout(() => {
       setIsConfirmed(false)
+      setError("")
     }, 300)
   }
 
@@ -47,18 +108,35 @@ const SimpleConfirmationModal = ({ isOpen, onClose, activityTitle, message }) =>
               <span className="font-semibold text-teal-600">{activityTitle}</span>?
             </p>
 
+            {/* Error message */}
+            {error && (
+              <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start">
+                <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
             <div className="flex justify-center space-x-4">
               <button
                 onClick={handleClose}
                 className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-lg transition-colors border border-gray-300 shadow-sm"
+                disabled={isSubmitting}
               >
                 Close
               </button>
               <button
                 onClick={handleConfirm}
-                className="px-6 py-2 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white text-sm rounded-lg transition-colors shadow-sm"
+                disabled={isSubmitting}
+                className="px-6 py-2 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white text-sm rounded-lg transition-colors shadow-sm flex items-center justify-center min-w-[100px]"
               >
-                Confirm
+                {isSubmitting ? (
+                  <>
+                    <Loader className="animate-spin h-4 w-4 mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  "Confirm"
+                )}
               </button>
             </div>
           </div>
@@ -87,4 +165,3 @@ const SimpleConfirmationModal = ({ isOpen, onClose, activityTitle, message }) =>
 }
 
 export default SimpleConfirmationModal
-

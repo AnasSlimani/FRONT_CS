@@ -21,6 +21,7 @@ import {
 import Image from "next/image"
 import CreateActivityModal from "@/components/dashboardadmin/modals/CreateActivityModal"
 import EditActivityModal from "@/components/dashboardadmin/modals/EditActivityModal"
+import ActivityDetails from "./ActivityDetails"
 
 export default function Activities() {
   const [activities, setActivities] = useState([])
@@ -34,6 +35,7 @@ export default function Activities() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [currentActivity, setCurrentActivity] = useState(null)
   const [deleteConfirmation, setDeleteConfirmation] = useState(null)
+  const [selectedActivityId, setSelectedActivityId] = useState(null)
 
   // Fetch activities data
   useEffect(() => {
@@ -97,6 +99,12 @@ export default function Activities() {
     setActivities(activities.map((activity) => (activity.id === updatedActivity.id ? updatedActivity : activity)))
     // Refresh activities from server to ensure we have the latest data
     fetchActivities()
+  }
+
+  // Handle view details button click
+  const handleViewDetails = (activity) => {
+    setSelectedActivityId(activity.id)
+    setActiveDropdown(null) // Close dropdown
   }
 
   // Handle edit button click
@@ -191,7 +199,10 @@ export default function Activities() {
           {activeDropdown === activity.id && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
               <div className="py-1">
-                <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
+                <button
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  onClick={() => handleViewDetails(activity)}
+                >
                   <Eye className="h-4 w-4 mr-2 text-gray-500" />
                   View Details
                 </button>
@@ -311,6 +322,11 @@ export default function Activities() {
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
       </div>
     )
+  }
+
+  // If an activity is selected, show its details
+  if (selectedActivityId) {
+    return <ActivityDetails activityId={selectedActivityId} onBack={() => setSelectedActivityId(null)} />
   }
 
   return (
@@ -494,4 +510,3 @@ export default function Activities() {
     </div>
   )
 }
-
