@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trophy, Users, Calendar, Clock, MapPin, Table, Award, Loader2, AlertCircle } from "lucide-react"
+import { Users, Calendar, Table, Award, Loader2, AlertCircle } from "lucide-react"
 import api from "@/app/api/axios"
 import TeamsList from "./TeamsList"
 import MatchesList from "./MatchesList"
@@ -77,52 +77,38 @@ const TournamentDetails = ({ activityId }) => {
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden">
       {/* Tournament Header */}
-      <div className="p-6 bg-gradient-to-r from-teal-600 to-teal-700 text-white">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-2xl font-bold flex items-center">
-              <Trophy className="h-6 w-6 mr-2" />
-              {activity.name}
-            </h2>
-            <p className="mt-1 text-teal-100">{activity.description}</p>
-          </div>
-          <div className="mt-4 md:mt-0 flex flex-wrap gap-3">
-            <div className="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-sm flex items-center">
-              <Calendar className="h-4 w-4 mr-1" />
-              {new Date(activity.startingDate).toLocaleDateString()} -{" "}
-              {new Date(activity.endingDate).toLocaleDateString()}
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-sm flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              {activity.time}
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-sm flex items-center">
-              <MapPin className="h-4 w-4 mr-1" />
-              {activity.localisation}
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Tournament Content */}
       <div className="p-6">
         <Tabs defaultValue="teams" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="teams" className="flex items-center">
-              <Users className="h-4 w-4 mr-2" />
-              Teams
+          <TabsList className="mb-8 w-full bg-gray-100 p-1.5 rounded-xl shadow-inner">
+            <TabsTrigger
+              value="teams"
+              className="flex text-black items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-amber-600 transition-all duration-300"
+            >
+              <Users className="h-5 w-5" />
+              <span className="font-medium">Teams</span>
             </TabsTrigger>
-            <TabsTrigger value="matches" className="flex items-center">
-              <Calendar className="h-4 w-4 mr-2" />
-              Matches
+            <TabsTrigger
+              value="matches"
+              className="flex text-black items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-amber-600 transition-all duration-300"
+            >
+              <Calendar className="h-5 w-5" />
+              <span className="font-medium">Matches</span>
             </TabsTrigger>
-            <TabsTrigger value="standings" className="flex items-center">
-              <Table className="h-4 w-4 mr-2" />
-              Standings
+            <TabsTrigger
+              value="standings"
+              className="flex text-black items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-amber-600 transition-all duration-300"
+            >
+              <Table className="h-5 w-5" />
+              <span className="font-medium">Standings</span>
             </TabsTrigger>
-            <TabsTrigger value="topscorers" className="flex items-center">
-              <Award className="h-4 w-4 mr-2" />
-              Top Scorers
+            <TabsTrigger
+              value="topscorers"
+              className="flex text-black items-center gap-2 px-4 py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-amber-600 transition-all duration-300"
+            >
+              <Award className="h-5 w-5" />
+              <span className="font-medium">Top Scorers</span>
             </TabsTrigger>
           </TabsList>
 

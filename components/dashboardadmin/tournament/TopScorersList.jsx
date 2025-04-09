@@ -1,10 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { Award, Loader2, AlertCircle, User } from "lucide-react"
+import { Trophy, Loader2, User, Users } from "lucide-react"
 import api from "@/app/api/axios"
-import Image from "next/image"
 
 const TopScorersList = ({ activityId }) => {
   const [topScorers, setTopScorers] = useState([])
@@ -13,129 +11,100 @@ const TopScorersList = ({ activityId }) => {
 
   useEffect(() => {
     const fetchTopScorers = async () => {
+      if (!activityId) return
+
       setIsLoading(true)
       setError(null)
+
       try {
         const response = await api.get(`/matches/activity/${activityId}/topscorers`)
+        console.log("Top scorers data:", response.data) // Add this line to debug
         setTopScorers(response.data)
       } catch (err) {
         console.error("Error fetching top scorers:", err)
-        setError("Failed to load top scorers. Please try again.")
+        setError("Failed to load top scorers. Please try again later.")
       } finally {
         setIsLoading(false)
       }
     }
 
-    if (activityId) {
-      fetchTopScorers()
-    }
+    fetchTopScorers()
   }, [activityId])
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="bg-white rounded-xl shadow-md p-6 h-full flex items-center justify-center">
         <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />
-        <span className="ml-2 text-gray-600">Loading top scorers...</span>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start">
-        <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
-        <p className="text-red-700">{error}</p>
+      <div className="bg-white rounded-xl shadow-md p-6 h-full">
+        <div className="text-red-500 text-center">{error}</div>
       </div>
     )
   }
 
-  if (topScorers.length === 0) {
+  if (!topScorers || topScorers.length === 0) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start">
-        <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
-        <p className="text-yellow-700">
-          No goal scorers available yet. Top scorers will be shown once goals have been recorded.
-        </p>
+      <div className="bg-white rounded-xl shadow-md p-6 h-full">
+        <div className="flex items-center justify-center mb-4">
+          <Trophy className="h-6 w-6 text-teal-500 mr-2" />
+          <h2 className="text-lg font-bold text-gray-800">Top Scorers</h2>
+        </div>
+        <div className="text-gray-500 text-center italic">
+          No goal scorers yet. Check back after matches have been played.
+        </div>
       </div>
     )
-  }
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.3, ease: "easeOut" },
-    },
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-gray-800 flex items-center">
-          <Award className="h-5 w-5 mr-2 text-teal-500" />
-          Top Scorers
-        </h3>
+    <div className="bg-white rounded-xl shadow-md p-6 h-full">
+      <div className="flex items-center justify-center mb-4">
+        <Trophy className="h-6 w-6 text-teal-500 mr-2" />
+        <h2 className="text-lg font-bold text-gray-800">Top Scorers</h2>
       </div>
 
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
-        {topScorers.map((scorer, index) => (
-          <motion.div
-            key={scorer.userId}
-            variants={itemVariants}
-            className={`bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden ${
-              index === 0 ? "border-yellow-300 shadow-yellow-100" : ""
-            }`}
-          >
-            <div className="p-4 flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 mr-4">
-                  <div className="relative">
-                    <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                      {scorer.profilePicture ? (
-                        <Image
-                          src={scorer.profilePicture || "/placeholder.svg"}
-                          alt={scorer.username}
-                          width={48}
-                          height={48}
-                          className="object-cover"
-                        />
-                      ) : (
-                        <User className="h-6 w-6 text-gray-500" />
-                      )}
+      <div className="overflow-hidden">
+        <table className="min-w-full">
+          <thead>
+            <tr className="bg-teal-50 text-left text-xs font-semibold text-teal-700 uppercase tracking-wider">
+              <th className="px-4 py-2 rounded-tl-lg">#</th>
+              <th className="px-4 py-2">PLAYER</th>
+              <th className="px-4 py-2">TEAM</th>
+              <th className="px-4 py-2 rounded-tr-lg text-center">GOALS</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {topScorers.map((scorer, index) => {
+              console.log("Rendering scorer:", scorer) // Add this line to debug
+              return (
+                <tr key={`${scorer.scorerId}-${index}`} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 text-teal-500 mr-2" />
+                      <span>{scorer.scorerName || "Unknown Player"}</span>
                     </div>
-                    {index === 0 && (
-                      <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
-                        <Award className="h-3 w-3 text-white" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-lg font-medium text-gray-800">{scorer.username}</h4>
-                  <p className="text-sm text-gray-500">{scorer.team?.name || "Unknown Team"}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full font-bold">
-                  {scorer.goals} {scorer.goals === 1 ? "goal" : "goals"}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    <div className="flex items-center">
+                      <Users className="h-4 w-4 text-teal-500 mr-2" />
+                      <span>{scorer.team ? scorer.team.name : "Unknown Team"}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-teal-600 text-center">
+                    <span className="bg-teal-100 text-teal-800 px-2 py-1 rounded-full">{scorer.goals}</span>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

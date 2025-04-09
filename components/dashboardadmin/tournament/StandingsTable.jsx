@@ -69,8 +69,8 @@ const StandingsTable = ({ activityId }) => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+          <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
             <tr>
               <th
                 scope="col"
@@ -141,7 +141,15 @@ const StandingsTable = ({ activityId }) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                className={index < 3 ? "bg-green-50" : ""}
+                className={
+                  index === 0
+                    ? "bg-gradient-to-r from-yellow-50 to-yellow-100/50 font-medium"
+                    : index === 1
+                      ? "bg-gradient-to-r from-gray-50 to-gray-100/50"
+                      : index === 2
+                        ? "bg-gradient-to-r from-amber-50 to-amber-100/50"
+                        : ""
+                }
               >
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{standing.team.name}</td>

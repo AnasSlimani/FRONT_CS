@@ -112,17 +112,28 @@ const MatchesList = ({ activityId }) => {
       </div>
 
       <Tabs defaultValue="1" value={activeGameweek} onValueChange={setActiveGameweek}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="1" className="flex items-center">
-            Gameweek 1
-          </TabsTrigger>
-          <TabsTrigger value="2" className="flex items-center">
-            Gameweek 2
-          </TabsTrigger>
-          <TabsTrigger value="3" className="flex items-center">
-            Gameweek 3
-          </TabsTrigger>
-        </TabsList>
+        <div className="mb-8 flex justify-center">
+          <TabsList className="inline-flex bg-gray-100/80 backdrop-blur-sm p-1.5 rounded-full shadow-inner">
+            <TabsTrigger
+              value="1"
+              className="px-5 py-2 rounded-full data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 font-medium"
+            >
+              Gameweek 1
+            </TabsTrigger>
+            <TabsTrigger
+              value="2"
+              className="px-5 py-2 rounded-full data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 font-medium"
+            >
+              Gameweek 2
+            </TabsTrigger>
+            <TabsTrigger
+              value="3"
+              className="px-5 py-2 rounded-full data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 font-medium"
+            >
+              Gameweek 3
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {[1, 2, 3].map((gameweek) => (
           <TabsContent key={gameweek} value={gameweek.toString()}>
@@ -191,7 +202,9 @@ const MatchCard = ({ match, onEdit, onDelete }) => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+      whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+      transition={{ duration: 0.3 }}
+      className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
     >
       <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
         <div className="flex items-center">
