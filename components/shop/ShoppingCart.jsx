@@ -94,6 +94,7 @@ const ShoppingCart = () => {
   const handlePayment = () => {
     setIsDropdownOpen(false)
     setIsPaymentModalOpen(true)
+    // alert("time to chop ")
   }
 
   // Animation variants

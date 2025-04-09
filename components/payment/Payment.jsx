@@ -17,7 +17,7 @@ import {
   Clock,
   Zap,
   MapPin,
-} from "lucide-react"
+} from "lucide-react" 
 
 const Payment = () => {
   // State for form data
