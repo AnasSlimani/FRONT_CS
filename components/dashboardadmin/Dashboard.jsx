@@ -36,12 +36,13 @@ export default function Dashboard() {
         const nbrTournaments = await api.get('/activities/count?type=tournament',{public:true});
         const nbrTrips =await api.get('/activities/count?type=deplacement',{public:true});
         const nbrFriendlyMatches =await api.get('/activities/count?type=matchAmical',{public:true});
+        const nbrOrders = await api.get('/orders/count',{public:true});
         setStats({
             adherents: { count: nbrUsers.data , trend: 5.2 },
             tournaments: { count: nbrTournaments.data , trend: 12.5 },
             trips: { count: nbrTrips.data, trend: -3.8 },
             friendlyMatches: { count: nbrFriendlyMatches.data , trend: 7.1 },
-            orders: { count: 156, trend: 9.3 },
+            orders: { count: nbrOrders.data, trend: 9.3 },
             revenue: { amount: 12580, trend: 15.7 },
           })
         

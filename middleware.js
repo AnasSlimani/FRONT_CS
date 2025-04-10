@@ -1,31 +1,43 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
+import { jwtDecode } from "jwt-decode";
 
 export function middleware(request) {
-  // Get the pathname of the request (e.g. /, /about, /dashboardadmin)
-  const path = request.nextUrl.pathname
+  const path = request.nextUrl.pathname;
 
-  // If the path starts with /dashboardadmin, we want to use a different layout
+  // Retrieve token from cookies
+  const token = request.cookies.get('token')?.value;
+
+  // Protect the '/dashboardadmin' route
   if (path.startsWith("/dashboardadmin")) {
-    // We don't need to do anything special here, just let it pass through
-    // The layout.jsx in the dashboardadmin folder will handle the layout
-    return NextResponse.next()
+    // No token, redirect to login
+    if (!token) {
+      console.log("You are not connected");
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    try {
+      const decoded = jwtDecode(token);
+
+      // Allow only admin users
+      if (decoded.role !== 'ADMIN') {
+        return NextResponse.redirect(new URL('/', request.url)); // redirect non-admins
+      }
+
+      return NextResponse.next();
+
+    } catch (error) {
+      alert("invalid token");
+      return NextResponse.redirect(new URL('/', request.url));
+    }
   }
 
-  // For all other routes, use the default layout
-  return NextResponse.next()
+  // All other routes
+  return NextResponse.next();
 }
 
-// See "Matching Paths" below to learn more
+// Define paths where middleware should run
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/dashboardadmin/:path*",
   ],
-}
-
+};

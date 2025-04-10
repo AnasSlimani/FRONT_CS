@@ -113,7 +113,8 @@ const LoginModal = ({ isOpen, onClose }) => {
       const token = response.data
       console.log(token)
       localStorage.setItem("token", token)
-      onClose() // Close the modal after successful login
+      document.cookie = `token=${token}; path=/;`;
+      onClose() 
       window.location.href = "/"
     } catch (error) {
       setError("Invalid email or password. Please try again.")

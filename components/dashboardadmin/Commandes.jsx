@@ -1,7 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { motion } from "framer-motion"
+import api from "@/app/api/axios"
+import { jwtDecode } from "jwt-decode"
 import {
   Search,
   Filter,
@@ -26,142 +28,18 @@ export default function Commandes() {
   const [activeStatus, setActiveStatus] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState(null)
+  const [idUser,setIdUser] = useState("")
 
   // Fetch orders data
   useEffect(() => {
     const fetchOrders = async () => {
       setIsLoading(true)
       try {
-        // In a real app, you would fetch this data from your API
-        // For now, we'll simulate a delay and use mock data
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-
-        // Mock data
-        const mockOrders = [
-          {
-            id: 1,
-            orderNumber: "ORD-2023-001",
-            customer: {
-              id: 101,
-              name: "Jean Dupont",
-              email: "jean.dupont@example.com",
-              phone: "+33 6 12 34 56 78",
-            },
-            product: {
-              id: 201,
-              name: "Club Sportif Polo",
-              size: "M",
-              price: 30,
-              image: "polo.jpg",
-            },
-            orderDate: "2023-06-15",
-            status: "pending",
-            paymentMethod: "card",
-          },
-          {
-            id: 2,
-            orderNumber: "ORD-2023-002",
-            customer: {
-              id: 102,
-              name: "Marie Martin",
-              email: "marie.martin@example.com",
-              phone: "+33 6 23 45 67 89",
-            },
-            product: {
-              id: 202,
-              name: "Club Sportif Hoodie",
-              size: "L",
-              price: 45,
-              image: "hoodie.jpg",
-            },
-            orderDate: "2023-06-18",
-            status: "delivered",
-            paymentMethod: "cash",
-          },
-          {
-            id: 3,
-            orderNumber: "ORD-2023-003",
-            customer: {
-              id: 103,
-              name: "Pierre Durand",
-              email: "pierre.durand@example.com",
-              phone: "+33 6 34 56 78 90",
-            },
-            product: {
-              id: 203,
-              name: "Club Sportif Cap",
-              size: "One Size",
-              price: 20,
-              image: "cap.jpg",
-            },
-            orderDate: "2023-06-20",
-            status: "pending",
-            paymentMethod: "card",
-          },
-          {
-            id: 4,
-            orderNumber: "ORD-2023-004",
-            customer: {
-              id: 104,
-              name: "Sophie Lefebvre",
-              email: "sophie.lefebvre@example.com",
-              phone: "+33 6 45 67 89 01",
-            },
-            product: {
-              id: 204,
-              name: "Club Sportif T-Shirt",
-              size: "S",
-              price: 25,
-              image: "tshirt.jpg",
-            },
-            orderDate: "2023-06-22",
-            status: "cancelled",
-            paymentMethod: "card",
-          },
-          {
-            id: 5,
-            orderNumber: "ORD-2023-005",
-            customer: {
-              id: 105,
-              name: "Thomas Bernard",
-              email: "thomas.bernard@example.com",
-              phone: "+33 6 56 78 90 12",
-            },
-            product: {
-              id: 205,
-              name: "Club Sportif Shorts",
-              size: "M",
-              price: 28,
-              image: "shorts.jpg",
-            },
-            orderDate: "2023-06-25",
-            status: "delivered",
-            paymentMethod: "cash",
-          },
-          {
-            id: 6,
-            orderNumber: "ORD-2023-006",
-            customer: {
-              id: 106,
-              name: "Julie Petit",
-              email: "julie.petit@example.com",
-              phone: "+33 6 67 89 01 23",
-            },
-            product: {
-              id: 206,
-              name: "Club Sportif Bag",
-              size: "One Size",
-              price: 35,
-              image: "bag.jpg",
-            },
-            orderDate: "2023-06-28",
-            status: "pending",
-            paymentMethod: "card",
-          },
-        ]
-
-        setOrders(mockOrders)
-        setFilteredOrders(mockOrders)
+        const idUser = jwtDecode(localStorage.getItem("token")).id;
+        setIdUser(idUser)
+        const response = await api.get("/orders")
+        setOrders(response.data)
+        setFilteredOrders(response.data)
       } catch (error) {
         console.error("Error fetching orders:", error)
       } finally {
@@ -442,35 +320,35 @@ export default function Commandes() {
                         <ShoppingBag className="h-5 w-5 text-teal-600" />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
+                        <div className="text-sm font-medium text-gray-900">1</div>
                         <div className="text-sm text-gray-500 flex items-center">
                           <Calendar className="h-3 w-3 mr-1" />
-                          {new Date(order.orderDate).toLocaleDateString()}
+                          {new Date(order.date).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{order.customer.name}</div>
+                    <div className="text-sm text-gray-900">{order.user.username}</div>
                     <div className="text-sm text-gray-500 flex items-center">
                       <Mail className="h-3 w-3 mr-1" />
-                      {order.customer.email}
+                      {order.user.email}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 relative rounded overflow-hidden">
                         <Image
-                          src={`/images/productImages/${order.product.image}`}
-                          alt={order.product.name}
+                          src={`/images/productImages/${order.product.productImage}`}
+                          alt={order.product.productName}
                           fill
                           className="object-cover"
                         />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{order.product.name}</div>
+                        <div className="text-sm font-medium text-gray-900">{order.product.productName}</div>
                         <div className="text-sm text-gray-500">
-                          Size: {order.product.size} | {order.product.price}€
+                          Size: {order.product.size} | {order.product.productPrice}€
                         </div>
                       </div>
                     </div>
