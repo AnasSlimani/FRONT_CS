@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { X, Plus, Trash2, Loader2, AlertCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { X, Plus, Trash2, Loader2, AlertCircle, Clock, User, Users, Check } from "lucide-react"
 import api from "@/app/api/axios"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/inpute"
-import { Label } from "@/components/ui/labele"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 
 const MatchResultModal = ({ match, isOpen, onClose, onSave }) => {
@@ -18,6 +18,7 @@ const MatchResultModal = ({ match, isOpen, onClose, onSave }) => {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [dropdownOpen, setDropdownOpen] = useState(null)
 
   // Initialize form data when match changes
   useEffect(() => {
@@ -48,13 +49,34 @@ const MatchResultModal = ({ match, isOpen, onClose, onSave }) => {
     }))
   }
 
-  // Add goal event
+  // Update the handleAddGoalEvent function to intelligently select the default team
+  // based on the current score and remaining goals to be assigned
   const handleAddGoalEvent = () => {
+    // Count how many goals are already assigned to each team
+    const teamAGoals = formData.goalEvents.filter((g) => g.teamId === match.teamA.id).length
+    const teamBGoals = formData.goalEvents.filter((g) => g.teamId === match.teamB.id).length
+
+    // Get the total goals for each team from the score inputs
+    const totalTeamAGoals = formData.scoreTeamA ? Number.parseInt(formData.scoreTeamA, 10) : 0
+    const totalTeamBGoals = formData.scoreTeamB ? Number.parseInt(formData.scoreTeamB, 10) : 0
+
+    // Determine which team should get the next goal based on remaining goals to be assigned
+    let defaultTeamId = match.teamA.id // Default to team A
+
+    // If team B has more remaining goals to assign, default to team B
+    if (totalTeamBGoals - teamBGoals > totalTeamAGoals - teamAGoals) {
+      defaultTeamId = match.teamB.id
+    }
+    // If team A has all goals assigned but team B doesn't, default to team B
+    else if (teamAGoals >= totalTeamAGoals && teamBGoals < totalTeamBGoals) {
+      defaultTeamId = match.teamB.id
+    }
+
     const newGoalEvent = {
       tempId: Date.now(), // Temporary ID for UI purposes
-      scorerId: "",
+      scorerId: "", // Initialize with empty string
       scorerName: "",
-      teamId: match.teamA.id, // Default to team A
+      teamId: defaultTeamId,
       minute: 1,
       isOwnGoal: false,
     }
@@ -87,6 +109,19 @@ const MatchResultModal = ({ match, isOpen, onClose, onSave }) => {
       ...prev,
       goalEvents: updatedGoalEvents,
     }))
+  }
+
+  // Toggle player dropdown
+  const toggleDropdown = (index) => {
+    setDropdownOpen(dropdownOpen === index ? null : index)
+  }
+
+  // Select player from dropdown
+  const selectPlayer = (index, player) => {
+    // Make sure we're setting both the ID and name correctly
+    handleGoalEventChange(index, "scorerId", player.id || "")
+    handleGoalEventChange(index, "scorerName", player.username)
+    setDropdownOpen(null)
   }
 
   // Handle form submission
@@ -159,10 +194,13 @@ const MatchResultModal = ({ match, isOpen, onClose, onSave }) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-t-xl">
+        <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-t-xl">
           <h2 className="text-xl font-bold">Update Match Result</h2>
-          <button className="text-white hover:text-gray-200 transition-colors" onClick={onClose}>
-            <X className="h-6 w-6" />
+          <button
+            className="text-white hover:text-gray-200 transition-colors bg-white/20 rounded-full p-1.5 hover:bg-white/30"
+            onClick={onClose}
+          >
+            <X className="h-5 w-5" />
           </button>
         </div>
 
@@ -178,17 +216,20 @@ const MatchResultModal = ({ match, isOpen, onClose, onSave }) => {
         <form onSubmit={handleSubmit} className="p-6">
           {/* Match details */}
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Match Details</h3>
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+              <Users className="h-5 w-5 mr-2 text-teal-500" />
+              Match Details
+            </h3>
+            <div className="bg-gradient-to-r from-teal-50 to-emerald-50 p-5 rounded-xl border border-teal-100 shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="text-center">
-                  <p className="font-medium text-gray-800">{match.teamA?.name || "Team A"}</p>
+                <div className="text-center flex-1">
+                  <p className="font-bold text-teal-700 text-lg">{match.teamA?.name || "Team A"}</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-sm text-gray-600">vs</p>
+                <div className="text-center px-4">
+                  <p className="text-sm font-medium text-teal-600 bg-white/50 px-3 py-1 rounded-full">vs</p>
                 </div>
-                <div className="text-center">
-                  <p className="font-medium text-gray-800">{match.teamB?.name || "Team B"}</p>
+                <div className="text-center flex-1">
+                  <p className="font-bold text-teal-700 text-lg">{match.teamB?.name || "Team B"}</p>
                 </div>
               </div>
             </div>
@@ -196,51 +237,57 @@ const MatchResultModal = ({ match, isOpen, onClose, onSave }) => {
 
           {/* Match status */}
           <div className="mb-6">
-            <Label className="block text-sm font-medium text-gray-700 mb-2">Match Status</Label>
-            <div className="flex space-x-4">
-              <label className="flex items-center">
+            <Label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <Clock className="h-4 w-4 mr-2 text-teal-500" />
+              Match Status
+            </Label>
+            <div className="flex space-x-4 bg-gray-50 p-3 rounded-lg">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
                   name="status"
                   value="scheduled"
                   checked={formData.status === "scheduled"}
                   onChange={handleStatusChange}
-                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded-full"
                 />
-                <span className="ml-2 text-gray-700">Scheduled</span>
+                <span className="ml-2 text-gray-700 font-medium">Scheduled</span>
               </label>
-              <label className="flex items-center">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
                   name="status"
                   value="played"
                   checked={formData.status === "played"}
                   onChange={handleStatusChange}
-                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded-full"
                 />
-                <span className="ml-2 text-gray-700">Played</span>
+                <span className="ml-2 text-gray-700 font-medium">Played</span>
               </label>
-              <label className="flex items-center">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
                   name="status"
                   value="canceled"
                   checked={formData.status === "canceled"}
                   onChange={handleStatusChange}
-                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded-full"
                 />
-                <span className="ml-2 text-gray-700">Canceled</span>
+                <span className="ml-2 text-gray-700 font-medium">Canceled</span>
               </label>
             </div>
           </div>
 
           {/* Match score - only shown if status is "played" */}
           {formData.status === "played" && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Match Score</h3>
-              <div className="flex items-center justify-between">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                <Users className="h-5 w-5 mr-2 text-teal-500" />
+                Match Score
+              </h3>
+              <div className="flex items-center justify-between bg-gradient-to-r from-teal-50 to-emerald-50 p-5 rounded-xl border border-teal-100">
                 <div className="w-1/3">
-                  <Label htmlFor="scoreTeamA" className="block text-sm font-medium text-gray-700 mb-1">
+                  <Label htmlFor="scoreTeamA" className="block text-sm font-medium text-teal-700 mb-1">
                     {match.teamA?.name || "Team A"}
                   </Label>
                   <Input
@@ -250,13 +297,13 @@ const MatchResultModal = ({ match, isOpen, onClose, onSave }) => {
                     value={formData.scoreTeamA}
                     onChange={handleChange}
                     min="0"
-                    className="block w-full"
+                    className="block w-full border-teal-300 focus:border-teal-500 focus:ring-teal-500 bg-white/70 text-lg font-bold text-center text-teal-700"
                     required
                   />
                 </div>
-                <div className="text-center text-gray-500">vs</div>
+                <div className="text-center text-teal-600 font-bold text-xl">vs</div>
                 <div className="w-1/3">
-                  <Label htmlFor="scoreTeamB" className="block text-sm font-medium text-gray-700 mb-1">
+                  <Label htmlFor="scoreTeamB" className="block text-sm font-medium text-teal-700 mb-1">
                     {match.teamB?.name || "Team B"}
                   </Label>
                   <Input
@@ -266,66 +313,147 @@ const MatchResultModal = ({ match, isOpen, onClose, onSave }) => {
                     value={formData.scoreTeamB}
                     onChange={handleChange}
                     min="0"
-                    className="block w-full"
+                    className="block w-full border-teal-300 focus:border-teal-500 focus:ring-teal-500 bg-white/70 text-lg font-bold text-center text-teal-700"
                     required
                   />
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* Goal events - only shown if status is "played" */}
           {formData.status === "played" && (
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold text-gray-800">Goal Scorers</h3>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mb-6"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                  <User className="h-5 w-5 mr-2 text-teal-500" />
+                  Goal Scorers
+                </h3>
                 <Button
                   type="button"
                   onClick={handleAddGoalEvent}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center"
+                  className="bg-teal-500 hover:bg-teal-600 text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors shadow-sm"
                 >
-                  <Plus className="h-4 w-4 mr-1" />
+                  <Plus className="h-4 w-4" />
                   Add Goal
                 </Button>
               </div>
 
               {formData.goalEvents.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">No goals recorded yet.</p>
+                <div className="text-sm text-gray-500 italic bg-gray-50 p-4 rounded-lg text-center">
+                  No goals recorded yet. Add goals to match the final score.
+                </div>
               ) : (
                 <div className="space-y-4">
                   {formData.goalEvents.map((goal, index) => (
-                    <div key={goal.id || goal.tempId || index} className="bg-gray-50 p-4 rounded-lg">
+                    <motion.div
+                      key={goal.id || goal.tempId || index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-gradient-to-r from-teal-50 to-emerald-50 p-4 rounded-xl border border-teal-100 shadow-sm"
+                    >
                       <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-medium text-gray-800">Goal {index + 1}</h4>
+                        <h4 className="font-medium text-teal-700 flex items-center">
+                          <div className="bg-teal-100 text-teal-700 w-6 h-6 rounded-full flex items-center justify-center mr-2 font-bold">
+                            {index + 1}
+                          </div>
+                          Goal Details
+                        </h4>
                         <button
                           type="button"
                           onClick={() => handleRemoveGoalEvent(index)}
-                          className="text-red-500 hover:text-red-700"
+                          className="text-red-500 hover:text-red-700 bg-white/50 hover:bg-white/80 p-1.5 rounded-full transition-colors"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label className="block text-sm font-medium text-gray-700 mb-1">Scorer Name</Label>
-                          <Input
-                            type="text"
-                            value={goal.scorerName}
-                            onChange={(e) => handleGoalEventChange(index, "scorerName", e.target.value)}
-                            className="block w-full"
-                            required
-                          />
+                        <div className="relative">
+                          <Label className="block text-sm font-medium text-teal-700 mb-1 flex items-center">
+                            <User className="h-3.5 w-3.5 mr-1.5" />
+                            Scorer Name
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              type="text"
+                              value={goal.scorerName}
+                              readOnly
+                              placeholder="Select a player"
+                              onClick={() => toggleDropdown(index)}
+                              className="block w-full border-teal-300 focus:border-teal-500 focus:ring-teal-500 bg-white/70 pr-8 cursor-pointer"
+                            />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                              <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path
+                                  fillRule="evenodd"
+                                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Player dropdown */}
+                          <AnimatePresence>
+                            {dropdownOpen === index && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="absolute z-10 mt-1 w-full bg-white rounded-lg shadow-lg border border-teal-100 max-h-48 overflow-y-auto"
+                              >
+                                <div className="p-2 text-sm font-medium text-teal-700 bg-teal-50 border-b border-teal-100">
+                                  Select a player
+                                </div>
+                                <ul>
+                                  {goal.teamId === match.teamA.id
+                                    ? match.teamA.members.map((player) => (
+                                        <li
+                                          key={player.id}
+                                          onClick={() => selectPlayer(index, player)}
+                                          className="px-3 py-2 hover:bg-teal-50 cursor-pointer flex items-center justify-between text-gray-700 hover:text-teal-700 transition-colors"
+                                        >
+                                          <span>{player.username}</span>
+                                          {goal.scorerId === player.id && <Check className="h-4 w-4 text-teal-500" />}
+                                        </li>
+                                      ))
+                                    : match.teamB.members.map((player) => (
+                                        <li
+                                          key={player.id}
+                                          onClick={() => selectPlayer(index, player)}
+                                          className="px-3 py-2 hover:bg-teal-50 cursor-pointer flex items-center justify-between text-gray-700 hover:text-teal-700 transition-colors"
+                                        >
+                                          <span>{player.username}</span>
+                                          {goal.scorerId === player.id && <Check className="h-4 w-4 text-teal-500" />}
+                                        </li>
+                                      ))}
+                                </ul>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
 
                         <div>
-                          <Label className="block text-sm font-medium text-gray-700 mb-1">Team</Label>
+                          <Label className="block text-sm font-medium text-teal-700 mb-1 flex items-center">
+                            <Users className="h-3.5 w-3.5 mr-1.5" />
+                            Team
+                          </Label>
                           <select
                             value={goal.teamId}
-                            onChange={(e) => handleGoalEventChange(index, "teamId", e.target.value)}
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                            onChange={(e) => {
+                              handleGoalEventChange(index, "teamId", e.target.value)
+                              // Reset scorer when team changes
+                              handleGoalEventChange(index, "scorerId", "")
+                              handleGoalEventChange(index, "scorerName", "")
+                            }}
+                            className="block w-full px-3 py-2 border border-teal-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 bg-white/70 text-gray-700"
                             required
                           >
                             <option value={match.teamA.id}>{match.teamA.name}</option>
@@ -334,49 +462,72 @@ const MatchResultModal = ({ match, isOpen, onClose, onSave }) => {
                         </div>
 
                         <div>
-                          <Label className="block text-sm font-medium text-gray-700 mb-1">Minute</Label>
+                          <Label className="block text-sm font-medium text-teal-700 mb-1 flex items-center">
+                            <Clock className="h-3.5 w-3.5 mr-1.5" />
+                            Minute
+                          </Label>
                           <Input
                             type="number"
-                            value={goal.minute}
-                            onChange={(e) => handleGoalEventChange(index, "minute", Number.parseInt(e.target.value))}
+                            value={goal.minute.toString()}
+                            onChange={(e) =>
+                              handleGoalEventChange(index, "minute", Number.parseInt(e.target.value) || 1)
+                            }
                             min="1"
                             max="90"
-                            className="block w-full"
+                            className="block w-full border-teal-300 focus:border-teal-500 focus:ring-teal-500 bg-white/70"
                             required
                           />
                         </div>
 
                         <div className="flex items-center">
-                          <Checkbox
-                            id={`own-goal-${index}`}
-                            checked={goal.isOwnGoal}
-                            onCheckedChange={(checked) => handleGoalEventChange(index, "isOwnGoal", checked)}
-                          />
-                          <Label htmlFor={`own-goal-${index}`} className="ml-2 text-sm font-medium text-gray-700">
-                            Own Goal
-                          </Label>
+                          <div className="flex h-10 items-center space-x-2 bg-white/70 px-3 rounded-md border border-teal-300">
+                            <Checkbox
+                              id={`own-goal-${index}`}
+                              checked={goal.isOwnGoal}
+                              onCheckedChange={(checked) => handleGoalEventChange(index, "isOwnGoal", checked)}
+                              className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                            />
+                            <Label
+                              htmlFor={`own-goal-${index}`}
+                              className="text-sm font-medium text-gray-700 cursor-pointer"
+                            >
+                              Own Goal
+                            </Label>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* Form actions */}
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button
+              type="button"
+              onClick={onClose}
+              disabled={isLoading}
+              className="px-4 py-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="bg-teal-500 hover:bg-teal-600 text-white">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white rounded-lg transition-colors shadow-md flex items-center gap-2"
+            >
               {isLoading ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Saving...
                 </>
               ) : (
-                "Save Changes"
+                <>
+                  <Check className="h-4 w-4" />
+                  Save Changes
+                </>
               )}
             </Button>
           </div>

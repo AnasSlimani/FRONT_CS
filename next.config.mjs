@@ -5,6 +5,12 @@ const nextConfig = {
   },
   images: {
     domains: ["images.unsplash.com", "assets.aceternity.com",'example.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
 };
 

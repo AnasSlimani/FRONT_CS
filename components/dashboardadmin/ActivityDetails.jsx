@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { ArrowLeft, Calendar, Clock, MapPin, Users, Trophy, Loader2, AlertCircle } from "lucide-react"
 import api from "@/app/api/axios"
-import { Button } from "@/components/ui/button"
+import { motion } from "framer-motion"
 import TournamentDetails from "./tournament/TournamentDetails"
 
 const ActivityDetails = ({ activityId, onBack }) => {
@@ -64,10 +64,16 @@ const ActivityDetails = ({ activityId, onBack }) => {
   return (
     <div className="space-y-6">
       {/* Back button */}
-      <Button onClick={onBack} variant="outline" className="mb-4 flex items-center">
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Activities
-      </Button>
+      <motion.button
+        onClick={onBack}
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        whileHover={{ scale: 1.03, backgroundColor: "#f59e0b" }}
+        className="mb-6 flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg shadow-md transition-all duration-300"
+      >
+        <ArrowLeft className="h-5 w-5" />
+        <span className="font-medium">Back to Activities</span>
+      </motion.button>
 
       {/* Activity header */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
@@ -129,23 +135,6 @@ const ActivityDetails = ({ activityId, onBack }) => {
                   {activity.nbrCurrentParticipants || 0} / {activity.nbrParticipants}
                 </p>
               </div>
-            </div>
-          </div>
-
-          {/* Status indicator */}
-          <div className="mb-6">
-            <div
-              className={`px-4 py-2 rounded-lg ${
-                activity.isTournamentFull
-                  ? "bg-green-100 border border-green-200"
-                  : "bg-yellow-100 border border-yellow-200"
-              }`}
-            >
-              <p className={`text-sm font-medium ${activity.isTournamentFull ? "text-green-800" : "text-yellow-800"}`}>
-                {activity.isTournamentFull
-                  ? "Tournament is full and ready to start"
-                  : `Waiting for more teams (${activity.teamParticipants?.length || 0}/${activity.nbrTeams})`}
-              </p>
             </div>
           </div>
 

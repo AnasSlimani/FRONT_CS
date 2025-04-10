@@ -26,6 +26,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [token, setToken] = useState(null)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  
 
   // Handle scroll effect
   useEffect(() => {

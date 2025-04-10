@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import api from "@/app/api/axios"
 import { createPortal } from "react-dom"
+import { jwtDecode } from "jwt-decode"
 
 const LoginModal = ({ isOpen, onClose }) => {
   const [loginForm, setLoginForm] = useState({
@@ -104,24 +105,29 @@ const LoginModal = ({ isOpen, onClose }) => {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
+  e.preventDefault()
+  setError("")
+  setIsLoading(true)
 
-    try {
-      const response = await api.post("/users/login", loginForm, { public: true })
-      const token = response.data
-      console.log(token)
-      localStorage.setItem("token", token)
-      onClose() // Close the modal after successful login
-      window.location.href = "/"
-    } catch (error) {
-      setError("Invalid email or password. Please try again.")
-      console.error("Login error:", error)
-    } finally {
-      setIsLoading(false)
-    }
+  try {
+    const response = await api.post("/users/login", loginForm, { public: true })
+    const token = response.data
+    console.log(token);
+    // Store token
+    localStorage.setItem("token", token)
+    document.cookie = `token=${token}; path=/`
+    
+    // Redirect based on role
+    onClose()
+    window.location.href = jwtDecode(token).role === "ADMIN" ? "/dashboardadmin" : "/"
+    
+  } catch (error) {
+    setError("Invalid email or password. Please try again.")
+    console.error("Login error:", error)
+  } finally {
+    setIsLoading(false)
   }
+}
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -132,38 +138,38 @@ const LoginModal = ({ isOpen, onClose }) => {
   }
 
   // Handle Google Sign-In response
-const handleGoogleSignIn = async (response) => {
+  const handleGoogleSignIn = async (response) => {
     try {
-      setIsLoading(true);
-      setError("");
+      setIsLoading(true)
+      setError("")
   
-      // Decode the JWT token to get user information
-      const decodedToken = parseJwt(response.credential);
-      console.log("Google user info:", decodedToken);
-  
-      // Créer une requête pour l'authentification Google
+      const decodedToken = parseJwt(response.credential)
       const googleAuthData = {
         email: decodedToken.email,
         googleId: decodedToken.sub,
         name: `${decodedToken.given_name} ${decodedToken.family_name}`
-      };
+      }
   
-      // Utiliser l'endpoint Google Login
       const loginResponse = await api.post(
         "users/google-login",
         googleAuthData,
         { public: true }
-      );
+      )
   
-      // Stocker le token et rediriger
-      localStorage.setItem("token", loginResponse.data);
-      onClose();
-      window.location.href = "/";
+      const { token, role } = loginResponse.data
+      
+      // Store token
+      localStorage.setItem("token", token)
+      
+      // Redirect based on role
+      onClose()
+      window.location.href = role === "ADMIN" ? "/dashboardadmin" : "/"
+      
     } catch (error) {
-      console.error("Error with Google Sign-In:", error);
-      setError(error.response?.data || "Failed to sign in with Google. Please try again.");
+      console.error("Error with Google Sign-In:", error)
+      setError(error.response?.data || "Failed to sign in with Google. Please try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   };
 
