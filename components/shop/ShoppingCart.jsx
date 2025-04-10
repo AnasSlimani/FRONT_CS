@@ -1,77 +1,159 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef, useContext, createContext } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { ShoppingCartIcon as CartIcon, Check, X, CreditCard, Calendar, Shield } from "lucide-react"
-import Image from "next/image"
+import { useState, useEffect, useRef, useContext, createContext } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ShoppingCartIcon as CartIcon,
+  Check,
+  X,
+  CreditCard,
+  Calendar,
+  Shield,
+} from "lucide-react";
+import Image from "next/image";
+import { jwtDecode } from "jwt-decode";
+import api from "@/app/api/axios";
 
 // Create a context for the shopping cart
-export const CartContext = createContext()
+export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   // State for cart items
-  const [cartItems, setCartItems] = useState([
-  ])
+  const [cartItems, setCartItems] = useState([]);
+  
+
+  // a use effect for retrieving the cart's product from th db
+  useEffect(() => {
+    const fecthCartOrder = async () => {
+      try {
+        const idUser = jwtDecode(localStorage.getItem("token")).id;
+        const response = await api.get(`/orders/user/cart/${idUser}`);
+        
+        console.log("API Response Structure:", response.data);
+        
+        if (response.status === 200) {
+          const mappedItems = response.data.map(item => {
+            return {
+              id: item.id,
+              name: item.product?.productName || 'Unknown Product',
+              price: item.price ?? 0, // Default to 0 if null/undefined
+              image: item.product?.productImage || '',
+              selected: true,
+            };
+          });
+          
+          setCartItems(mappedItems);
+        }
+      } catch (error) {
+        console.error("Cart fetch error:", error);
+      }
+    };
+  
+    fecthCartOrder();
+  }, []); // Empty dependency array = run once on mount
 
   // Add item to cart
-  const addToCart = (product) => {
+  const addToCart = async (product) => {
     // Check if product already exists in cart
     const existingItem = cartItems.find(
-      (item) => item.id === product.id || (item.name === product.productName && item.price === product.productPrice),
-    )
+      (item) =>
+        item.id === product.id ||
+        (item.name === product.productName &&
+          item.price === product.productPrice)
+    );
 
     if (existingItem) {
       // Product already in cart, you could increment quantity here if needed
-      return
+      return;
     }
 
-    // Add new product to cart
-    const newItem = {
+    try {
+      const idUser = jwtDecode(localStorage.getItem("token")).id;
+      const orderDate = new Date().toISOString().split("T")[0];
+      const body = {
+        user: {
+          id: idUser,
+        },
+        product: product,
+        date: orderDate,
+        price: product.productPrice,
+        status: "pending",
+      };
+
+      const response = await api.post("/orders", body);
+      if (response.status == 200) {
+        const persistedOrder = response.data;
+        console.log(persistedOrder);
+        alert("order initialised");
+      }
+    } catch (error) {
+      alert(error.message);
+    }
+
+     // Add new product to cart
+     const newItem = {
       id: product.id || Date.now(), // Use product ID or generate one
       name: product.productName || product.name,
       price: Number.parseFloat(product.productPrice) || product.price,
-      image: product.productImage ? `/images/productImages/${product.productImage}` : product.image,
+      image: product.productImage
+        ? `/images/productImages/${product.productImage}`
+        : product.image,
       selected: true,
-    }
+    };
 
-    setCartItems((prev) => [...prev, newItem])
-  }
+    setCartItems((prev) => [...prev, newItem]);
+  };
 
   // Remove item from cart
-  const removeFromCart = (id) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id))
-  }
+  const removeFromCart = async (id) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
+    try {
+      const response = await api.delete(`/orders/${id}`);
+      if (response.status === 200) {
+        alert("Product deleted from the db");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   // Toggle item selection
   const toggleItemSelection = (id) => {
     setCartItems((prevItems) =>
-      prevItems.map((item) => (item.id === id ? { ...item, selected: !item.selected } : item)),
-    )
-  }
+      prevItems.map((item) =>
+        item.id === id ? { ...item, selected: !item.selected } : item
+      )
+    );
+  };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, toggleItemSelection }}>
+    <CartContext.Provider
+      value={{ cartItems, addToCart, removeFromCart, toggleItemSelection }}
+    >
       {children}
     </CartContext.Provider>
-  )
-}
+  );
+};
 
 const ShoppingCart = () => {
   // Use cart context
-  const { cartItems, removeFromCart, toggleItemSelection } = useContext(CartContext)
+  const { cartItems, removeFromCart, toggleItemSelection } =
+    useContext(CartContext);
 
   // State for dropdown visibility
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // State for payment modal
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Ref for dropdown
-  const dropdownRef = useRef(null)
-  const buttonRef = useRef(null)
+  const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
 
   // Calculate total price of selected items
-  const totalPrice = cartItems.filter((item) => item.selected).reduce((total, item) => total + item.price, 0)
+  const totalPrice = cartItems
+    .filter((item) => item.selected)
+    .reduce((total, item) => total + item.price, 0);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -82,20 +164,19 @@ const ShoppingCart = () => {
         buttonRef.current &&
         !buttonRef.current.contains(event.target)
       ) {
-        setIsDropdownOpen(false)
+        setIsDropdownOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Handle payment
   const handlePayment = () => {
-    setIsDropdownOpen(false)
-    setIsPaymentModalOpen(true)
-    // alert("time to chop ")
-  }
+    setIsDropdownOpen(false);
+    setIsPaymentModalOpen(true);
+  };
 
   // Animation variants
   const dropdownVariants = {
@@ -116,7 +197,7 @@ const ShoppingCart = () => {
       scale: 0.95,
       transition: { duration: 0.2 },
     },
-  }
+  };
 
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.8 },
@@ -134,14 +215,32 @@ const ShoppingCart = () => {
       scale: 0.8,
       transition: { duration: 0.2 },
     },
-  }
+  };
 
   // Payment method logos
   const paymentMethods = [
     { name: "Visa", logo: "/images/payment/visa.jpg" },
     { name: "Mastercard", logo: "/images/payment/mastercard.jpg" },
     { name: "American Express", logo: "/images/payment/paypal.png" },
-  ]
+  ];
+
+  // payment info 
+   
+
+  const confirmOrder = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await api.post("/orders/confirm", cartItems);
+      if (response.status == 200) {
+        console.log(response.data);
+        alert("orders confirm");
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+   
+  }
 
   return (
     <div className="relative z-50">
@@ -175,13 +274,16 @@ const ShoppingCart = () => {
               <h3 className="font-bold text-lg">Your Cart</h3>
               <p className="text-sm text-teal-100">{cartItems.length} items</p>
             </div>
-
+            {/* ////////////////////////////////////////////////////////////////////////////////////////////////////////// */}
             {/* Cart Items */}
             <div className="max-h-80 overflow-y-auto">
               {cartItems.length > 0 ? (
                 <ul className="divide-y divide-gray-200">
                   {cartItems.map((item) => (
-                    <li key={item.id} className="p-4 hover:bg-gray-50 transition-colors">
+                    <li
+                      key={item.id}
+                      className="p-4 hover:bg-gray-50 transition-colors"
+                    >
                       <div className="flex items-center space-x-4">
                         {/* Selection Circle */}
                         <button
@@ -198,7 +300,7 @@ const ShoppingCart = () => {
                         {/* Product Image */}
                         <div className="relative w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
                           <Image
-                            src={item.image || "/placeholder.svg?height=100&width=100"}
+                            src={`/images/productImages/${item.image}`}
                             alt={item.name}
                             fill
                             className="object-cover"
@@ -207,8 +309,14 @@ const ShoppingCart = () => {
 
                         {/* Product Info */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
-                          <p className="text-sm text-gray-500">{item.price}€</p>
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {item.name}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {item.price != undefined
+                              ? `${item.price}€`
+                              : "Price not available"}
+                          </p>{" "}
                         </div>
 
                         {/* Remove Button */}
@@ -224,15 +332,21 @@ const ShoppingCart = () => {
                   ))}
                 </ul>
               ) : (
-                <div className="p-4 text-center text-gray-500">Your cart is empty</div>
+                <div className="p-4 text-center text-gray-500">
+                  Your cart is empty
+                </div>
               )}
             </div>
 
             {/* Footer with Total and Pay Button */}
             <div className="p-4 bg-gray-50 border-t border-gray-200">
               <div className="flex justify-between items-center mb-4">
-                <span className="text-sm font-medium text-gray-700">Total:</span>
-                <span className="text-lg font-bold text-teal-600">{totalPrice.toFixed(2)}€</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Total:
+                </span>
+                <span className="text-lg font-bold text-teal-600">
+                  {totalPrice.toFixed(2)}€
+                </span>
               </div>
 
               <button
@@ -277,7 +391,7 @@ const ShoppingCart = () => {
 
               {/* Payment Form */}
               <div className="p-6">
-                <form>
+                <form onSubmit={confirmOrder}>
                   {/* Card Information */}
                   <div className="mb-6">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -287,7 +401,10 @@ const ShoppingCart = () => {
 
                     <div className="space-y-4">
                       <div>
-                        <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                          htmlFor="cardNumber"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                           Card Number
                         </label>
                         <div className="relative">
@@ -304,7 +421,10 @@ const ShoppingCart = () => {
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="expiryDate"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
                             Expiry Date
                           </label>
                           <div className="relative">
@@ -320,7 +440,10 @@ const ShoppingCart = () => {
                         </div>
 
                         <div>
-                          <label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="cvv"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
                             CVV
                           </label>
                           <div className="relative">
@@ -342,7 +465,8 @@ const ShoppingCart = () => {
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 flex items-start">
                     <Shield className="w-5 h-5 text-teal-600 mt-0.5 mr-3 flex-shrink-0" />
                     <p className="text-sm text-gray-600">
-                      Your payment information is secure. We use industry-standard encryption to protect your data.
+                      Your payment information is secure. We use
+                      industry-standard encryption to protect your data.
                     </p>
                   </div>
 
@@ -356,12 +480,17 @@ const ShoppingCart = () => {
 
                   {/* Payment Method Logos */}
                   <div className="mt-6 pt-6 border-t border-gray-200">
-                    <p className="text-sm text-gray-500 mb-3 text-center">We accept</p>
+                    <p className="text-sm text-gray-500 mb-3 text-center">
+                      We accept
+                    </p>
                     <div className="flex justify-center space-x-4">
                       {paymentMethods.map((method) => (
                         <div key={method.name} className="h-8 relative w-12">
                           <Image
-                            src={method.logo || `/placeholder.svg?height=32&width=48`}
+                            src={
+                              method.logo ||
+                              `/placeholder.svg?height=32&width=48`
+                            }
                             alt={method.name}
                             width={48}
                             height={32}
@@ -378,8 +507,7 @@ const ShoppingCart = () => {
         )}
       </AnimatePresence>
     </div>
-  )
-}
+  );
+};
 
-export default ShoppingCart
-
+export default ShoppingCart;
