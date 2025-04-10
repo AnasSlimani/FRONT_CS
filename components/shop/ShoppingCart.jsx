@@ -227,11 +227,20 @@ const ShoppingCart = () => {
   // payment info 
    
 
-  // const confirmOrder = async (e) => {
-  //   e.preventDefault();
-  //   const response = api.post('/orders/confirm', cartItems)
-  //   console.log((await response).status);
-  // }
+  const confirmOrder = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await api.post("/orders/confirm", cartItems);
+      if (response.status == 200) {
+        console.log(response.data);
+        alert("orders confirm");
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+   
+  }
 
   return (
     <div className="relative z-50">
