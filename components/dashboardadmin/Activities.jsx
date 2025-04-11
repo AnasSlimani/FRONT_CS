@@ -324,7 +324,7 @@ export default function Activities() {
     )
   }
 
-  // If an activity is selected, show its details
+  
   if (selectedActivityId) {
     return <ActivityDetails activityId={selectedActivityId} onBack={() => setSelectedActivityId(null)} />
   }
