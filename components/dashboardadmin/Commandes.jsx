@@ -88,9 +88,9 @@ export default function Commandes() {
     switch (status) {
       case "pending":
         return "bg-yellow-100 text-yellow-800"
-      case "delivered":
+      case "completed":
         return "bg-green-100 text-green-800"
-      case "cancelled":
+      case "canceled":
         return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -102,9 +102,9 @@ export default function Commandes() {
     switch (status) {
       case "pending":
         return <Package className="h-4 w-4" />
-      case "delivered":
+      case "completed":
         return <CheckCircle className="h-4 w-4" />
-      case "cancelled":
+      case "canceled":
         return <XCircle className="h-4 w-4" />
       default:
         return <Package className="h-4 w-4" />
@@ -208,16 +208,16 @@ export default function Commandes() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
               activeStatus === "delivered" ? "bg-green-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-            onClick={() => setActiveStatus("delivered")}
+            onClick={() => setActiveStatus("completed")}
           >
             <CheckCircle className="h-4 w-4 mr-1" />
-            Delivered
+            Payed
           </button>
           <button
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
-              activeStatus === "cancelled" ? "bg-red-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              activeStatus === "canceled" ? "bg-red-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-            onClick={() => setActiveStatus("cancelled")}
+            onClick={() => setActiveStatus("canceled")}
           >
             <XCircle className="h-4 w-4 mr-1" />
             Cancelled
@@ -360,8 +360,8 @@ export default function Commandes() {
                       {getStatusIcon(order.status)}
                       <span className="ml-1">
                         {order.status === "pending" && "Pending"}
-                        {order.status === "delivered" && "Delivered"}
-                        {order.status === "cancelled" && "Cancelled"}
+                        {order.status === "completed" && "completed"}
+                        {order.status === "canceled" && "Canceled"}
                       </span>
                     </span>
                   </td>

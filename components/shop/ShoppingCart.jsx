@@ -20,7 +20,6 @@ export const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   // State for cart items
   const [cartItems, setCartItems] = useState([]);
-  
 
   // a use effect for retrieving the cart's product from th db
   useEffect(() => {
@@ -28,27 +27,32 @@ export const CartProvider = ({ children }) => {
       try {
         const idUser = jwtDecode(localStorage.getItem("token")).id;
         const response = await api.get(`/orders/user/cart/${idUser}`);
-        
+
         console.log("API Response Structure:", response.data);
-        
+
         if (response.status === 200) {
-          const mappedItems = response.data.map(item => {
+          const mappedItems = response.data.map((item) => {
             return {
               id: item.id,
-              name: item.product?.productName || 'Unknown Product',
+              user: item.user,
+              product: item.product,
+              name: item.product?.productName || "Unknown Product",
               price: item.price ?? 0, // Default to 0 if null/undefined
-              image: item.product?.productImage || '',
+              image: item.product?.productImage || "",
+              date: item.date,
+              status: item.status,
               selected: true,
             };
           });
-          
+
           setCartItems(mappedItems);
+          console.log(mappedItems);
         }
       } catch (error) {
         console.error("Cart fetch error:", error);
       }
     };
-  
+
     fecthCartOrder();
   }, []); // Empty dependency array = run once on mount
 
@@ -85,29 +89,37 @@ export const CartProvider = ({ children }) => {
         const persistedOrder = response.data;
         console.log(persistedOrder);
         alert("order initialised");
+
+        // Add new product to cart
+        const newItem = {
+          id: persistedOrder.id || Date.now(), // Use product ID or generate one
+          user: persistedOrder.user,
+          product: persistedOrder.product,
+          date: persistedOrder.date,
+          name: persistedOrder.product.productName || product.name,
+          price: Number.parseFloat(persistedOrder.product.productPrice) || product.price,
+          image: persistedOrder.product.productImage  
+            ? persistedOrder.product.productImage
+            : product.image,
+          status: persistedOrder.status,  
+          selected: true,
+        };
+
+        console.log("new item " + newItem);
+        
+        setCartItems((prev) => [...prev, newItem]);
       }
     } catch (error) {
       alert(error.message);
     }
-
-     // Add new product to cart
-     const newItem = {
-      id: product.id || Date.now(), // Use product ID or generate one
-      name: product.productName || product.name,
-      price: Number.parseFloat(product.productPrice) || product.price,
-      image: product.productImage
-        ? `/images/productImages/${product.productImage}`
-        : product.image,
-      selected: true,
-    };
-
-    setCartItems((prev) => [...prev, newItem]);
   };
 
   // Remove item from cart
   const removeFromCart = async (id) => {
+    
     setCartItems((prev) => prev.filter((item) => item.id !== id));
     try {
+      alert("product id " + id);
       const response = await api.delete(`/orders/${id}`);
       if (response.status === 200) {
         alert("Product deleted from the db");
@@ -174,6 +186,8 @@ const ShoppingCart = () => {
 
   // Handle payment
   const handlePayment = () => {
+    // select only checked items
+    
     setIsDropdownOpen(false);
     setIsPaymentModalOpen(true);
   };
@@ -224,14 +238,13 @@ const ShoppingCart = () => {
     { name: "American Express", logo: "/images/payment/paypal.png" },
   ];
 
-  // payment info 
-   
+  // payment info
 
   const confirmOrder = async (e) => {
     e.preventDefault();
-
+    const selectedCart = cartItems.filter((item) => item.selected == true)
     try {
-      const response = await api.post("/orders/confirm", cartItems);
+      const response = await api.post("/orders/confirm", selectedCart);
       if (response.status == 200) {
         console.log(response.data);
         alert("orders confirm");
@@ -239,8 +252,7 @@ const ShoppingCart = () => {
     } catch (error) {
       console.log(error.message);
     }
-   
-  }
+  };
 
   return (
     <div className="relative z-50">
