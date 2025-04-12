@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
   User,
@@ -20,33 +20,33 @@ import {
   BarChart,
   Award,
   Save,
-} from "lucide-react"
-import api from "@/app/api/axios"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/inpute"
-import AvatarImage from "@/components/ui/avatar-image"
-import confetti from "canvas-confetti"
+} from "lucide-react";
+import api from "@/app/api/axios";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/inpute";
+import AvatarImage from "@/components/ui/avatar-image";
+import confetti from "canvas-confetti";
 
 const FriendlyMatchDetails = ({ activityId }) => {
-  const [activity, setActivity] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [teams, setTeams] = useState({ teamA: [], teamB: [] })
+  const [activity, setActivity] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [teams, setTeams] = useState({ teamA: [], teamB: [] });
   const [matchResult, setMatchResult] = useState({
     scoreTeamA: "0",
     scoreTeamB: "0",
     goalScorers: [],
     status: "pending", // pending, played
-  })
-  const [isGeneratingTeams, setIsGeneratingTeams] = useState(false)
-  const [isSavingResult, setIsSavingResult] = useState(false)
-  const [hasExistingData, setHasExistingData] = useState(false)
-  const [showScorerSelector, setShowScorerSelector] = useState(false)
-  const [selectedTeamForGoal, setSelectedTeamForGoal] = useState(null)
-  const [activeTab, setActiveTab] = useState("teams")
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
-  const confettiRef = useRef(null)
+  });
+  const [isGeneratingTeams, setIsGeneratingTeams] = useState(false);
+  const [isSavingResult, setIsSavingResult] = useState(false);
+  const [hasExistingData, setHasExistingData] = useState(false);
+  const [showScorerSelector, setShowScorerSelector] = useState(false);
+  const [selectedTeamForGoal, setSelectedTeamForGoal] = useState(null);
+  const [activeTab, setActiveTab] = useState("teams");
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const confettiRef = useRef(null);
 
   // Run confetti animation
   const runConfetti = () => {
@@ -55,78 +55,87 @@ const FriendlyMatchDetails = ({ activityId }) => {
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-      })
+        colors: ["#3b82f6", "#1d4ed8", "#2563eb", "#60a5fa"],
+      });
     }
-  }
+  };
 
   useEffect(() => {
     const fetchActivityDetails = async () => {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
       try {
         // Fetch activity details
-        const activityResponse = await api.get(`/activities/${activityId}`)
-        setActivity(activityResponse.data)
+        const activityResponse = await api.get(`/activities/${activityId}`);
+        setActivity(activityResponse.data);
 
         // Fetch friendly match data if it exists
         try {
-          const matchResponse = await api.get(`/friendly-matches/${activityId}`)
+          const matchResponse = await api.get(
+            `/friendly-matches/${activityId}`
+          );
           if (matchResponse.data) {
             // Make sure we properly handle the goal scorers data
-            const goalScorers = matchResponse.data.goalScorers || []
+            const goalScorers = matchResponse.data.goalScorers || [];
 
             // Add a unique id for each goal scorer if it doesn't have one
             const goalScorersWithIds = goalScorers.map((g) => ({
               ...g,
               id: g.id || Date.now() + Math.random().toString(36).substr(2, 9),
-            }))
+            }));
 
             setTeams({
               teamA: matchResponse.data.teamA || [],
               teamB: matchResponse.data.teamB || [],
-            })
+            });
             setMatchResult({
               scoreTeamA: matchResponse.data.scoreTeamA?.toString() || "0",
               scoreTeamB: matchResponse.data.scoreTeamB?.toString() || "0",
               goalScorers: goalScorersWithIds,
               status: matchResponse.data.status || "pending",
-            })
-            setHasExistingData(true)
+            });
+            setHasExistingData(true);
           }
         } catch (matchErr) {
           // No existing match data, which is fine
-          console.log("No existing match data found")
+          console.log("No existing match data found");
         }
       } catch (err) {
-        console.error("Error fetching activity details:", err)
-        setError("Failed to load match details. Please try again.")
+        console.error("Error fetching activity details:", err);
+        setError("Failed to load match details. Please try again.");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
     if (activityId) {
-      fetchActivityDetails()
+      fetchActivityDetails();
     }
-  }, [activityId])
+  }, [activityId]);
 
   const generateTeams = async () => {
-    if (!activity || !activity.individualParticipants || activity.individualParticipants.length < 2) {
-      setError("Not enough participants to generate teams.")
-      return
+    if (
+      !activity ||
+      !activity.individualParticipants ||
+      activity.individualParticipants.length < 2
+    ) {
+      setError("Not enough participants to generate teams.");
+      return;
     }
 
-    setIsGeneratingTeams(true)
-    setError(null)
+    setIsGeneratingTeams(true);
+    setError(null);
 
     try {
       // Randomly shuffle the participants
-      const shuffledParticipants = [...activity.individualParticipants].sort(() => 0.5 - Math.random())
+      const shuffledParticipants = [...activity.individualParticipants].sort(
+        () => 0.5 - Math.random()
+      );
 
       // Split into two teams
-      const halfLength = Math.ceil(shuffledParticipants.length / 2)
-      const teamA = shuffledParticipants.slice(0, halfLength)
-      const teamB = shuffledParticipants.slice(halfLength)
+      const halfLength = Math.ceil(shuffledParticipants.length / 2);
+      const teamA = shuffledParticipants.slice(0, halfLength);
+      const teamB = shuffledParticipants.slice(halfLength);
 
       // Save to backend
       const response = await api.post(`/friendly-matches`, {
@@ -137,31 +146,33 @@ const FriendlyMatchDetails = ({ activityId }) => {
         scoreTeamB: 0,
         goalScorers: [],
         status: "pending",
-      })
+      });
 
-      setTeams({ teamA, teamB })
-      setHasExistingData(true)
+      setTeams({ teamA, teamB });
+      setHasExistingData(true);
 
-      showSuccess("Teams generated successfully!")
-      setTimeout(() => runConfetti(), 300)
+      showSuccess("Teams generated successfully!");
+      setTimeout(() => runConfetti(), 300);
     } catch (err) {
-      console.error("Error generating teams:", err)
-      setError("Failed to generate teams. Please try again.")
+      console.error("Error generating teams:", err);
+      setError("Failed to generate teams. Please try again.");
     } finally {
-      setIsGeneratingTeams(false)
+      setIsGeneratingTeams(false);
     }
-  }
+  };
 
   const handleScoreChange = (team, value) => {
-    const numValue = Number.parseInt(value) || 0
+    const numValue = Number.parseInt(value) || 0;
 
     setMatchResult((prev) => {
       // Calculate current goals for the team
-      const currentGoals = prev.goalScorers.filter((g) => g.team === team).length
+      const currentGoals = prev.goalScorers.filter(
+        (g) => g.team === team
+      ).length;
 
       // If new score is higher, add new goal scorers
       if (numValue > currentGoals) {
-        const newGoalScorers = [...prev.goalScorers]
+        const newGoalScorers = [...prev.goalScorers];
         for (let i = currentGoals; i < numValue; i++) {
           newGoalScorers.push({
             id: Date.now() + i,
@@ -169,37 +180,39 @@ const FriendlyMatchDetails = ({ activityId }) => {
             playerName: "",
             team: team,
             minute: Math.floor(Math.random() * 90) + 1,
-          })
+          });
         }
 
         return {
           ...prev,
           [team]: value,
           goalScorers: newGoalScorers,
-        }
+        };
       }
 
       // If new score is lower, remove excess goal scorers
       else if (numValue < currentGoals) {
         // Get all goals not for this team
-        const otherTeamGoals = prev.goalScorers.filter((g) => g.team !== team)
+        const otherTeamGoals = prev.goalScorers.filter((g) => g.team !== team);
         // Get goals for this team and trim to the new score
-        const thisTeamGoals = prev.goalScorers.filter((g) => g.team === team).slice(0, numValue)
+        const thisTeamGoals = prev.goalScorers
+          .filter((g) => g.team === team)
+          .slice(0, numValue);
 
         return {
           ...prev,
           [team]: value,
           goalScorers: [...otherTeamGoals, ...thisTeamGoals],
-        }
+        };
       }
 
       // If same number of goals, just update the score
       return {
         ...prev,
         [team]: value,
-      }
-    })
-  }
+      };
+    });
+  };
 
   const addGoalScorer = (team) => {
     setMatchResult((prev) => {
@@ -215,64 +228,72 @@ const FriendlyMatchDetails = ({ activityId }) => {
             minute: Math.floor(Math.random() * 90) + 1,
           },
         ],
-      }
-    })
-  }
+      };
+    });
+  };
 
   const removeGoalScorer = (id) => {
     setMatchResult((prev) => {
       return {
         ...prev,
         goalScorers: prev.goalScorers.filter((g) => g.id !== id),
-      }
-    })
-  }
+      };
+    });
+  };
 
   const updateGoalScorer = (id, field, value) => {
     setMatchResult((prev) => {
       return {
         ...prev,
-        goalScorers: prev.goalScorers.map((g) => (g.id === id ? { ...g, [field]: value } : g)),
-      }
-    })
-  }
+        goalScorers: prev.goalScorers.map((g) =>
+          g.id === id ? { ...g, [field]: value } : g
+        ),
+      };
+    });
+  };
 
   const selectPlayerForGoal = (goalId, player, team) => {
-    updateGoalScorer(goalId, "playerId", player.id)
-    updateGoalScorer(goalId, "playerName", player.username)
-  }
+    updateGoalScorer(goalId, "playerId", player.id);
+    updateGoalScorer(goalId, "playerName", player.username);
+  };
 
   const showSuccess = (message) => {
-    setSuccessMessage(message)
-    setShowSuccessMessage(true)
+    setSuccessMessage(message);
+    setShowSuccessMessage(true);
     setTimeout(() => {
-      setShowSuccessMessage(false)
-    }, 3000)
-  }
+      setShowSuccessMessage(false);
+    }, 3000);
+  };
 
   const saveMatchResult = async () => {
     // Validate scores
-    const scoreA = Number.parseInt(matchResult.scoreTeamA) || 0
-    const scoreB = Number.parseInt(matchResult.scoreTeamB) || 0
+    const scoreA = Number.parseInt(matchResult.scoreTeamA) || 0;
+    const scoreB = Number.parseInt(matchResult.scoreTeamB) || 0;
 
     // Validate all goal scorers have players selected
-    const hasUnassignedGoals = matchResult.goalScorers.some((g) => !g.playerId)
+    const hasUnassignedGoals = matchResult.goalScorers.some((g) => !g.playerId);
     if (hasUnassignedGoals) {
-      setError("Please select a player for each goal.")
-      return
+      setError("Please select a player for each goal.");
+      return;
     }
 
     // Validate goal scorers count matches score
-    const teamAGoals = matchResult.goalScorers.filter((g) => g.team === "scoreTeamA").length
-    const teamBGoals = matchResult.goalScorers.filter((g) => g.team === "scoreTeamB").length
+    const teamAGoals = matchResult.goalScorers.filter(
+      (g) => g.team === "scoreTeamA"
+    ).length;
+    const teamBGoals = matchResult.goalScorers.filter(
+      (g) => g.team === "scoreTeamB"
+    ).length;
 
     if (teamAGoals !== scoreA || teamBGoals !== scoreB) {
-      setError(`The number of goal scorers must match the score (Team A: ${scoreA}, Team B: ${scoreB}).`)
-      return
+      setError(
+        `The number of goal scorers must match the score (Team A: ${scoreA}, Team B: ${scoreB}).`
+      );
+      return;
     }
 
-    setIsSavingResult(true)
-    setError(null)
+    setIsSavingResult(true);
+    setError(null);
 
     try {
       // Prepare goal scorers data - ensure we're sending the right format
@@ -281,7 +302,7 @@ const FriendlyMatchDetails = ({ activityId }) => {
         playerName: g.playerName,
         team: g.team,
         minute: g.minute,
-      }))
+      }));
 
       // Save match result to backend
       await api.put(`/friendly-matches/${activityId}`, {
@@ -289,86 +310,113 @@ const FriendlyMatchDetails = ({ activityId }) => {
         scoreTeamB: scoreB,
         goalScorers: goalScorersData,
         status: "played",
-      })
+      });
 
       setMatchResult((prev) => ({
         ...prev,
         status: "played",
-      }))
+      }));
 
-      showSuccess("Match result saved successfully!")
-      setTimeout(() => runConfetti(), 300)
+      showSuccess("Match result saved successfully!");
+      setTimeout(() => runConfetti(), 300);
     } catch (err) {
-      console.error("Error saving match result:", err)
-      setError("Failed to save match result. Please try again.")
+      console.error("Error saving match result:", err);
+      setError("Failed to save match result. Please try again.");
     } finally {
-      setIsSavingResult(false)
+      setIsSavingResult(false);
     }
-  }
+  };
 
   const resetMatch = async () => {
-    if (!window.confirm("Are you sure you want to reset the match? All data will be lost.")) {
-      return
+    if (
+      !window.confirm(
+        "Are you sure you want to reset the match? All data will be lost."
+      )
+    ) {
+      return;
     }
 
     try {
-      await api.delete(`/friendly-matches/${activityId}`)
+      await api.delete(`/friendly-matches/${activityId}`);
 
-      setTeams({ teamA: [], teamB: [] })
+      setTeams({ teamA: [], teamB: [] });
       setMatchResult({
         scoreTeamA: "0",
         scoreTeamB: "0",
         goalScorers: [],
         status: "pending",
-      })
-      setHasExistingData(false)
+      });
+      setHasExistingData(false);
 
-      showSuccess("Match reset successfully!")
+      showSuccess("Match reset successfully!");
     } catch (err) {
-      console.error("Error resetting match:", err)
-      setError("Failed to reset match. Please try again.")
+      console.error("Error resetting match:", err);
+      setError("Failed to reset match. Please try again.");
     }
-  }
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
-        <span className="ml-2 text-gray-600">Loading match details...</span>
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-10 w-10 text-blue-500 animate-spin mb-3" />
+          <p className="text-blue-600 animate-pulse">
+            Loading match details...
+          </p>
+        </div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start mb-6">
-        <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
-        <p className="text-red-700">{error}</p>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-start mb-6">
+        <AlertCircle className="h-6 w-6 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+        <div>
+          <h3 className="text-lg font-semibold text-red-800 mb-1">
+            Error Loading Match
+          </h3>
+          <p className="text-red-700">{error}</p>
+        </div>
       </div>
-    )
+    );
   }
 
   if (!activity) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start">
-        <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
-        <p className="text-yellow-700">Match not found.</p>
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 flex items-start">
+        <AlertCircle className="h-6 w-6 text-yellow-500 mt-0.5 mr-3 flex-shrink-0" />
+        <div>
+          <h3 className="text-lg font-semibold text-yellow-800 mb-1">
+            Match Not Found
+          </h3>
+          <p className="text-yellow-700">
+            The requested match could not be found.
+          </p>
+        </div>
       </div>
-    )
+    );
   }
 
-  const hasGeneratedTeams = teams.teamA.length > 0 && teams.teamB.length > 0
-  const scoreTeamA = Number.parseInt(matchResult.scoreTeamA) || 0
-  const scoreTeamB = Number.parseInt(matchResult.scoreTeamB) || 0
-  const teamAGoalScorers = matchResult.goalScorers.filter((g) => g.team === "scoreTeamA")
-  const teamBGoalScorers = matchResult.goalScorers.filter((g) => g.team === "scoreTeamB")
+  const hasGeneratedTeams = teams.teamA.length > 0 && teams.teamB.length > 0;
+  const scoreTeamA = Number.parseInt(matchResult.scoreTeamA) || 0;
+  const scoreTeamB = Number.parseInt(matchResult.scoreTeamB) || 0;
+  const teamAGoalScorers = matchResult.goalScorers.filter(
+    (g) => g.team === "scoreTeamA"
+  );
+  const teamBGoalScorers = matchResult.goalScorers.filter(
+    (g) => g.team === "scoreTeamB"
+  );
 
   // Check if scores match goal scorers
-  const teamAGoalsMatch = teamAGoalScorers.length === scoreTeamA
-  const teamBGoalsMatch = teamBGoalScorers.length === scoreTeamB
+  const teamAGoalsMatch = teamAGoalScorers.length === scoreTeamA;
+  const teamBGoalsMatch = teamBGoalScorers.length === scoreTeamB;
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" ref={confettiRef}>
+    <div
+      className="bg-white rounded-xl shadow-lg overflow-hidden border border-blue-100"
+      ref={confettiRef}
+    >
       {/* Success message */}
       <AnimatePresence>
         {showSuccessMessage && (
@@ -388,7 +436,7 @@ const FriendlyMatchDetails = ({ activityId }) => {
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
-            <div className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+            <div className="bg-white bg-opacity-20 p-3 rounded-full mr-3">
               <Users className="h-6 w-6" />
             </div>
             <h2 className="text-2xl font-bold">Friendly Match Management</h2>
@@ -411,7 +459,9 @@ const FriendlyMatchDetails = ({ activityId }) => {
             <button
               onClick={() => setActiveTab("teams")}
               className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-all ${
-                activeTab === "teams" ? "bg-white text-blue-700 shadow-lg" : "bg-white/20 hover:bg-white/30"
+                activeTab === "teams"
+                  ? "bg-white text-blue-700 shadow-lg"
+                  : "bg-white/20 hover:bg-white/30"
               }`}
             >
               <Users className="h-4 w-4 inline mr-1" />
@@ -420,7 +470,9 @@ const FriendlyMatchDetails = ({ activityId }) => {
             <button
               onClick={() => setActiveTab("result")}
               className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-all ${
-                activeTab === "result" ? "bg-white text-blue-700 shadow-lg" : "bg-white/20 hover:bg-white/30"
+                activeTab === "result"
+                  ? "bg-white text-blue-700 shadow-lg"
+                  : "bg-white/20 hover:bg-white/30"
               }`}
             >
               <Trophy className="h-4 w-4 inline mr-1" />
@@ -429,7 +481,9 @@ const FriendlyMatchDetails = ({ activityId }) => {
             <button
               onClick={() => setActiveTab("goals")}
               className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-all ${
-                activeTab === "goals" ? "bg-white text-blue-700 shadow-lg" : "bg-white/20 hover:bg-white/30"
+                activeTab === "goals"
+                  ? "bg-white text-blue-700 shadow-lg"
+                  : "bg-white/20 hover:bg-white/30"
               }`}
             >
               <Award className="h-4 w-4 inline mr-1" />
@@ -484,7 +538,9 @@ const FriendlyMatchDetails = ({ activityId }) => {
                               size={40}
                             />
                           </div>
-                          <span className="font-medium text-gray-800">{player.username}</span>
+                          <span className="font-medium text-gray-800">
+                            {player.username}
+                          </span>
                         </motion.li>
                       ))}
                     </ul>
@@ -524,7 +580,9 @@ const FriendlyMatchDetails = ({ activityId }) => {
                               size={40}
                             />
                           </div>
-                          <span className="font-medium text-gray-800">{player.username}</span>
+                          <span className="font-medium text-gray-800">
+                            {player.username}
+                          </span>
                         </motion.li>
                       ))}
                     </ul>
@@ -535,19 +593,30 @@ const FriendlyMatchDetails = ({ activityId }) => {
 
             {/* Match Result Tab */}
             {activeTab === "result" && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-2">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="mt-2"
+              >
                 <div className="rounded-xl overflow-hidden shadow-lg border border-gray-200">
                   <div className="bg-gradient-to-b from-gray-50 to-white p-8">
-                    <h3 className="text-2xl font-bold text-center mb-8 text-gray-800">Match Result</h3>
+                    <h3 className="text-2xl font-bold text-center mb-8 text-gray-800">
+                      Match Result
+                    </h3>
 
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                       <div className="w-full md:w-2/5">
-                        <div className="bg-blue-500 text-white text-center py-3 rounded-t-lg font-bold">Team A</div>
+                        <div className="bg-blue-500 text-white text-center py-3 rounded-t-lg font-bold">
+                          Team A
+                        </div>
                         <div className="bg-gradient-to-b from-blue-50 to-white pt-6 pb-8 px-8 rounded-b-lg border border-blue-100 shadow-inner">
                           <Input
                             type="number"
                             value={matchResult.scoreTeamA}
-                            onChange={(e) => handleScoreChange("scoreTeamA", e.target.value)}
+                            onChange={(e) =>
+                              handleScoreChange("scoreTeamA", e.target.value)
+                            }
                             min="0"
                             className="block w-full text-5xl font-bold text-center text-blue-700 h-20 bg-white border-2 border-blue-300 focus:border-blue-500 shadow-sm"
                           />
@@ -573,12 +642,16 @@ const FriendlyMatchDetails = ({ activityId }) => {
                       </div>
 
                       <div className="w-full md:w-2/5">
-                        <div className="bg-green-500 text-white text-center py-3 rounded-t-lg font-bold">Team B</div>
+                        <div className="bg-green-500 text-white text-center py-3 rounded-t-lg font-bold">
+                          Team B
+                        </div>
                         <div className="bg-gradient-to-b from-green-50 to-white pt-6 pb-8 px-8 rounded-b-lg border border-green-100 shadow-inner">
                           <Input
                             type="number"
                             value={matchResult.scoreTeamB}
-                            onChange={(e) => handleScoreChange("scoreTeamB", e.target.value)}
+                            onChange={(e) =>
+                              handleScoreChange("scoreTeamB", e.target.value)
+                            }
                             min="0"
                             className="block w-full text-5xl font-bold text-center text-green-700 h-20 bg-white border-2 border-green-300 focus:border-green-500 shadow-sm"
                           />
@@ -604,7 +677,12 @@ const FriendlyMatchDetails = ({ activityId }) => {
 
             {/* Goal Scorers Tab */}
             {activeTab === "goals" && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-2">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="mt-2"
+              >
                 <div className="rounded-xl overflow-hidden shadow-lg border border-gray-200">
                   <div className="bg-gradient-to-r from-yellow-500 to-amber-600 p-4 text-white flex justify-between items-center">
                     <h3 className="text-xl font-bold flex items-center">
@@ -615,8 +693,8 @@ const FriendlyMatchDetails = ({ activityId }) => {
                       <button
                         className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center shadow-md transition-all"
                         onClick={() => {
-                          setSelectedTeamForGoal("scoreTeamA")
-                          addGoalScorer("scoreTeamA")
+                          setSelectedTeamForGoal("scoreTeamA");
+                          addGoalScorer("scoreTeamA");
                         }}
                       >
                         <Plus className="h-4 w-4 mr-1" />
@@ -625,8 +703,8 @@ const FriendlyMatchDetails = ({ activityId }) => {
                       <button
                         className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center shadow-md transition-all"
                         onClick={() => {
-                          setSelectedTeamForGoal("scoreTeamB")
-                          addGoalScorer("scoreTeamB")
+                          setSelectedTeamForGoal("scoreTeamB");
+                          addGoalScorer("scoreTeamB");
                         }}
                       >
                         <Plus className="h-4 w-4 mr-1" />
@@ -640,22 +718,38 @@ const FriendlyMatchDetails = ({ activityId }) => {
                     <div className="bg-white p-4 rounded-lg shadow-md mb-6 border border-amber-100">
                       <div className="flex justify-between items-center">
                         <div className="text-center">
-                          <div className="text-sm text-gray-500 mb-1">Team A Goals</div>
-                          <div className={`text-2xl font-bold ${teamAGoalsMatch ? "text-blue-600" : "text-red-500"}`}>
+                          <div className="text-sm text-gray-500 mb-1">
+                            Team A Goals
+                          </div>
+                          <div
+                            className={`text-2xl font-bold ${
+                              teamAGoalsMatch ? "text-blue-600" : "text-red-500"
+                            }`}
+                          >
                             {teamAGoalScorers.length} / {scoreTeamA}
                           </div>
                         </div>
 
                         <div className="text-center px-4">
-                          <div className="text-sm text-gray-500 mb-1">Total Score</div>
+                          <div className="text-sm text-gray-500 mb-1">
+                            Total Score
+                          </div>
                           <div className="text-2xl font-bold text-gray-800">
                             {scoreTeamA} - {scoreTeamB}
                           </div>
                         </div>
 
                         <div className="text-center">
-                          <div className="text-sm text-gray-500 mb-1">Team B Goals</div>
-                          <div className={`text-2xl font-bold ${teamBGoalsMatch ? "text-green-600" : "text-red-500"}`}>
+                          <div className="text-sm text-gray-500 mb-1">
+                            Team B Goals
+                          </div>
+                          <div
+                            className={`text-2xl font-bold ${
+                              teamBGoalsMatch
+                                ? "text-green-600"
+                                : "text-red-500"
+                            }`}
+                          >
                             {teamBGoalScorers.length} / {scoreTeamB}
                           </div>
                         </div>
@@ -667,9 +761,12 @@ const FriendlyMatchDetails = ({ activityId }) => {
                       <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 text-yellow-800 flex items-start">
                         <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
                         <div>
-                          <p className="font-medium">Goal scorers must match the score</p>
+                          <p className="font-medium">
+                            Goal scorers must match the score
+                          </p>
                           <p className="text-sm mt-1">
-                            Please add or remove goal scorers to match the final score for each team.
+                            Please add or remove goal scorers to match the final
+                            score for each team.
                           </p>
                         </div>
                       </div>
@@ -680,7 +777,10 @@ const FriendlyMatchDetails = ({ activityId }) => {
                       {matchResult.goalScorers.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
                           <Trophy className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                          <p>No goals added yet. Add goals using the buttons above.</p>
+                          <p>
+                            No goals added yet. Add goals using the buttons
+                            above.
+                          </p>
                         </div>
                       ) : (
                         <>
@@ -696,9 +796,17 @@ const FriendlyMatchDetails = ({ activityId }) => {
                                   goal={goal}
                                   team="A"
                                   players={teams.teamA}
-                                  onUpdate={(field, value) => updateGoalScorer(goal.id, field, value)}
+                                  onUpdate={(field, value) =>
+                                    updateGoalScorer(goal.id, field, value)
+                                  }
                                   onRemove={() => removeGoalScorer(goal.id)}
-                                  onSelectPlayer={(player) => selectPlayerForGoal(goal.id, player, "scoreTeamA")}
+                                  onSelectPlayer={(player) =>
+                                    selectPlayerForGoal(
+                                      goal.id,
+                                      player,
+                                      "scoreTeamA"
+                                    )
+                                  }
                                 />
                               ))}
                             </div>
@@ -716,9 +824,17 @@ const FriendlyMatchDetails = ({ activityId }) => {
                                   goal={goal}
                                   team="B"
                                   players={teams.teamB}
-                                  onUpdate={(field, value) => updateGoalScorer(goal.id, field, value)}
+                                  onUpdate={(field, value) =>
+                                    updateGoalScorer(goal.id, field, value)
+                                  }
                                   onRemove={() => removeGoalScorer(goal.id)}
-                                  onSelectPlayer={(player) => selectPlayerForGoal(goal.id, player, "scoreTeamB")}
+                                  onSelectPlayer={(player) =>
+                                    selectPlayerForGoal(
+                                      goal.id,
+                                      player,
+                                      "scoreTeamB"
+                                    )
+                                  }
                                 />
                               ))}
                             </div>
@@ -731,7 +847,9 @@ const FriendlyMatchDetails = ({ activityId }) => {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        disabled={!teamAGoalsMatch || !teamBGoalsMatch || isSavingResult}
+                        disabled={
+                          !teamAGoalsMatch || !teamBGoalsMatch || isSavingResult
+                        }
                         className={`px-6 py-3 rounded-full font-bold flex items-center ${
                           !teamAGoalsMatch || !teamBGoalsMatch || isSavingResult
                             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -779,22 +897,31 @@ const FriendlyMatchDetails = ({ activityId }) => {
               </div>
             </motion.div>
 
-            <h3 className="text-2xl font-bold text-blue-800 mb-3">Ready to Start the Match</h3>
+            <h3 className="text-2xl font-bold text-blue-800 mb-3">
+              Ready to Start the Match
+            </h3>
             <p className="text-blue-700 mb-8 max-w-md mx-auto">
-              Create two balanced teams from the available participants to begin the friendly match!
+              Create two balanced teams from the available participants to begin
+              the friendly match!
               {activity.individualParticipants && (
                 <span className="block mt-2 font-medium">
-                  {activity.individualParticipants.length} participants ready to play
+                  {activity.individualParticipants.length} participants ready to
+                  play
                 </span>
               )}
             </p>
 
             <motion.button
-              whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.4)" }}
+              whileHover={{
+                scale: 1.05,
+                boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.4)",
+              }}
               whileTap={{ scale: 0.98 }}
               onClick={generateTeams}
               disabled={
-                isGeneratingTeams || !activity.individualParticipants || activity.individualParticipants.length < 2
+                isGeneratingTeams ||
+                !activity.individualParticipants ||
+                activity.individualParticipants.length < 2
               }
               className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-full shadow-lg font-bold text-lg"
             >
@@ -814,18 +941,26 @@ const FriendlyMatchDetails = ({ activityId }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 // Goal Scorer Card Component
-const GoalScorerCard = ({ goal, team, players, onUpdate, onRemove, onSelectPlayer }) => {
-  const [showPlayerSelector, setShowPlayerSelector] = useState(false)
+const GoalScorerCard = ({
+  goal,
+  team,
+  players,
+  onUpdate,
+  onRemove,
+  onSelectPlayer,
+}) => {
+  const [showPlayerSelector, setShowPlayerSelector] = useState(false);
 
-  const bgColor = team === "A" ? "bg-blue-50" : "bg-green-50"
-  const borderColor = team === "A" ? "border-blue-200" : "border-green-200"
-  const textColor = team === "A" ? "text-blue-700" : "text-green-700"
-  const buttonBgColor = team === "A" ? "bg-blue-100" : "bg-green-100"
-  const buttonHoverBgColor = team === "A" ? "hover:bg-blue-200" : "hover:bg-green-200"
+  const bgColor = team === "A" ? "bg-blue-50" : "bg-green-50";
+  const borderColor = team === "A" ? "border-blue-200" : "border-green-200";
+  const textColor = team === "A" ? "text-blue-700" : "text-green-700";
+  const buttonBgColor = team === "A" ? "bg-blue-100" : "bg-green-100";
+  const buttonHoverBgColor =
+    team === "A" ? "hover:bg-blue-200" : "hover:bg-green-200";
 
   return (
     <motion.div
@@ -841,7 +976,9 @@ const GoalScorerCard = ({ goal, team, players, onUpdate, onRemove, onSelectPlaye
               onClick={() => setShowPlayerSelector(!showPlayerSelector)}
               className={`flex-1 flex items-center justify-between ${
                 goal.playerName ? "bg-white" : "bg-yellow-50"
-              } border ${goal.playerName ? "border-gray-200" : "border-yellow-300"} rounded-lg p-2 ${textColor}`}
+              } border ${
+                goal.playerName ? "border-gray-200" : "border-yellow-300"
+              } rounded-lg p-2 ${textColor}`}
             >
               {goal.playerName ? (
                 <div className="flex items-center">
@@ -864,7 +1001,15 @@ const GoalScorerCard = ({ goal, team, players, onUpdate, onRemove, onSelectPlaye
               <input
                 type="number"
                 value={goal.minute}
-                onChange={(e) => onUpdate("minute", Math.max(1, Math.min(90, Number.parseInt(e.target.value) || 1)))}
+                onChange={(e) =>
+                  onUpdate(
+                    "minute",
+                    Math.max(
+                      1,
+                      Math.min(90, Number.parseInt(e.target.value) || 1)
+                    )
+                  )
+                }
                 min="1"
                 max="90"
                 className="w-12 border border-gray-300 rounded p-1 text-center text-sm"
@@ -891,9 +1036,14 @@ const GoalScorerCard = ({ goal, team, players, onUpdate, onRemove, onSelectPlaye
             exit={{ opacity: 0, height: 0 }}
             className="mt-2 border border-gray-200 rounded-lg bg-white shadow-lg overflow-hidden"
           >
-            <div className={`${textColor} ${buttonBgColor} p-2 text-sm font-medium flex justify-between items-center`}>
+            <div
+              className={`${textColor} ${buttonBgColor} p-2 text-sm font-medium flex justify-between items-center`}
+            >
               <span>Select a player</span>
-              <button onClick={() => setShowPlayerSelector(false)} className="text-gray-500 hover:text-gray-700">
+              <button
+                onClick={() => setShowPlayerSelector(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -902,18 +1052,26 @@ const GoalScorerCard = ({ goal, team, players, onUpdate, onRemove, onSelectPlaye
                 <div
                   key={player.id}
                   className={`p-2 flex items-center cursor-pointer ${
-                    player.id === goal.playerId ? buttonBgColor : "hover:bg-gray-50"
+                    player.id === goal.playerId
+                      ? buttonBgColor
+                      : "hover:bg-gray-50"
                   }`}
                   onClick={() => {
-                    onSelectPlayer(player)
-                    setShowPlayerSelector(false)
+                    onSelectPlayer(player);
+                    setShowPlayerSelector(false);
                   }}
                 >
                   <div className="mr-2">
-                    <AvatarImage src={player.profilePicture || "/placeholder.svg"} alt={player.username} size={24} />
+                    <AvatarImage
+                      src={player.profilePicture || "/placeholder.svg"}
+                      alt={player.username}
+                      size={24}
+                    />
                   </div>
                   <span className="text-sm font-medium">{player.username}</span>
-                  {player.id === goal.playerId && <Check className="ml-auto h-4 w-4 text-green-500" />}
+                  {player.id === goal.playerId && (
+                    <Check className="ml-auto h-4 w-4 text-green-500" />
+                  )}
                 </div>
               ))}
             </div>
@@ -921,7 +1079,7 @@ const GoalScorerCard = ({ goal, team, players, onUpdate, onRemove, onSelectPlaye
         )}
       </AnimatePresence>
     </motion.div>
-  )
-}
+  );
+};
 
-export default FriendlyMatchDetails
+export default FriendlyMatchDetails;

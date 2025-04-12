@@ -37,6 +37,7 @@ const BilliardTournamentDetails = ({ activityId }) => {
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
+        colors: ["#f59e0b", "#d97706", "#92400e", "#78350f"],
       })
     }
   }
@@ -163,26 +164,34 @@ const BilliardTournamentDetails = ({ activityId }) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
-        <span className="ml-2 text-gray-600">Loading tournament details...</span>
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-10 w-10 text-amber-500 animate-spin mb-3" />
+          <p className="text-amber-600 animate-pulse">Loading tournament details...</p>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start mb-6">
-        <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
-        <p className="text-red-700">{error}</p>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-start mb-6">
+        <AlertCircle className="h-6 w-6 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+        <div>
+          <h3 className="text-lg font-semibold text-red-800 mb-1">Error Loading Tournament</h3>
+          <p className="text-red-700">{error}</p>
+        </div>
       </div>
     )
   }
 
   if (!activity) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start">
-        <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
-        <p className="text-yellow-700">Tournament not found.</p>
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 flex items-start">
+        <AlertCircle className="h-6 w-6 text-yellow-500 mt-0.5 mr-3 flex-shrink-0" />
+        <div>
+          <h3 className="text-lg font-semibold text-yellow-800 mb-1">Tournament Not Found</h3>
+          <p className="text-yellow-700">The requested tournament could not be found.</p>
+        </div>
       </div>
     )
   }
@@ -191,7 +200,7 @@ const BilliardTournamentDetails = ({ activityId }) => {
   const champion = tournamentData?.champion
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" ref={confettiRef}>
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-amber-200" ref={confettiRef}>
       {/* Success message */}
       <AnimatePresence>
         {showSuccessMessage && (
@@ -316,7 +325,7 @@ const BilliardTournamentDetails = ({ activityId }) => {
 
                   <div className="space-x-2">
                     <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
                       onClick={() =>
                         advancePlayer(
                           activeMatchDetails.round,
@@ -331,7 +340,7 @@ const BilliardTournamentDetails = ({ activityId }) => {
                     </Button>
 
                     <Button
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
                       onClick={() =>
                         advancePlayer(
                           activeMatchDetails.round,
@@ -356,7 +365,7 @@ const BilliardTournamentDetails = ({ activityId }) => {
       <div className="bg-gradient-to-r from-amber-600 to-amber-800 text-white p-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
-            <div className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+            <div className="bg-white bg-opacity-20 p-3 rounded-full mr-3">
               <Trophy className="h-6 w-6" />
             </div>
             <h2 className="text-2xl font-bold">Billiard Tournament</h2>
@@ -416,17 +425,17 @@ const BilliardTournamentDetails = ({ activityId }) => {
             {/* Connecting Lines - SVG Background */}
             <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }}>
               {/* Quarter to Semi lines */}
-              <line x1="25%" y1="25%" x2="35%" y2="25%" stroke="#f3f4f6" strokeWidth="3" />
-              <line x1="25%" y1="75%" x2="35%" y2="75%" stroke="#f3f4f6" strokeWidth="3" />
-              <line x1="75%" y1="25%" x2="65%" y2="25%" stroke="#f3f4f6" strokeWidth="3" />
-              <line x1="75%" y1="75%" x2="65%" y2="75%" stroke="#f3f4f6" strokeWidth="3" />
+              <line x1="25%" y1="25%" x2="35%" y2="25%" stroke="#fef3c7" strokeWidth="3" />
+              <line x1="25%" y1="75%" x2="35%" y2="75%" stroke="#fef3c7" strokeWidth="3" />
+              <line x1="75%" y1="25%" x2="65%" y2="25%" stroke="#fef3c7" strokeWidth="3" />
+              <line x1="75%" y1="75%" x2="65%" y2="75%" stroke="#fef3c7" strokeWidth="3" />
 
-              <line x1="35%" y1="25%" x2="35%" y2="75%" stroke="#f3f4f6" strokeWidth="3" />
-              <line x1="65%" y1="25%" x2="65%" y2="75%" stroke="#f3f4f6" strokeWidth="3" />
+              <line x1="35%" y1="25%" x2="35%" y2="75%" stroke="#fef3c7" strokeWidth="3" />
+              <line x1="65%" y1="25%" x2="65%" y2="75%" stroke="#fef3c7" strokeWidth="3" />
 
               {/* Semi to Final lines */}
-              <line x1="35%" y1="50%" x2="45%" y2="50%" stroke="#f3f4f6" strokeWidth="3" />
-              <line x1="65%" y1="50%" x2="55%" y2="50%" stroke="#f3f4f6" strokeWidth="3" />
+              <line x1="35%" y1="50%" x2="45%" y2="50%" stroke="#fef3c7" strokeWidth="3" />
+              <line x1="65%" y1="50%" x2="55%" y2="50%" stroke="#fef3c7" strokeWidth="3" />
             </svg>
 
             <div className="grid grid-cols-3 gap-4 relative z-10">
@@ -556,13 +565,13 @@ const MatchCard = ({ match, onSelect, round, matchNumber, isFinal = false }) => 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={`border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 ${
-        isFinal ? "bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200" : "bg-white border-gray-200"
+        isFinal ? "bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200" : "bg-white border-amber-100"
       } ${canSelect ? "cursor-pointer hover:border-amber-300" : ""}`}
       onClick={() => canSelect && onSelect()}
       whileHover={canSelect ? { y: -5 } : {}}
     >
-      <div className={`p-3 border-b ${isFinal ? "bg-amber-100 border-amber-200" : "bg-gray-50 border-gray-200"}`}>
-        <h4 className={`text-sm font-medium ${isFinal ? "text-amber-800" : "text-gray-700"}`}>
+      <div className={`p-3 border-b ${isFinal ? "bg-amber-100 border-amber-200" : "bg-amber-50 border-amber-100"}`}>
+        <h4 className={`text-sm font-medium ${isFinal ? "text-amber-800" : "text-amber-700"}`}>
           {round} {matchNumber}
         </h4>
       </div>
@@ -571,7 +580,7 @@ const MatchCard = ({ match, onSelect, round, matchNumber, isFinal = false }) => 
         {hasPlayers ? (
           <>
             <PlayerRow player={match.player1} score={match.player1Score} isWinner={match.winner === match.player1} />
-            <div className="my-2 text-center text-xs text-gray-500">vs</div>
+            <div className="my-2 text-center text-xs text-amber-500">vs</div>
             <PlayerRow player={match.player2} score={match.player2Score} isWinner={match.winner === match.player2} />
 
             {canSelect && (
@@ -581,7 +590,7 @@ const MatchCard = ({ match, onSelect, round, matchNumber, isFinal = false }) => 
             )}
           </>
         ) : (
-          <div className="py-4 text-center text-sm text-gray-500 italic">Waiting for players</div>
+          <div className="py-4 text-center text-sm text-amber-500 italic">Waiting for players</div>
         )}
       </div>
     </motion.div>
@@ -592,8 +601,8 @@ const MatchCard = ({ match, onSelect, round, matchNumber, isFinal = false }) => 
 const PlayerRow = ({ player, score, isWinner }) => {
   if (!player) {
     return (
-      <div className="h-10 flex items-center justify-center bg-gray-50 rounded border border-dashed border-gray-300">
-        <span className="text-xs text-gray-400">TBD</span>
+      <div className="h-10 flex items-center justify-center bg-amber-50 rounded border border-dashed border-amber-300">
+        <span className="text-xs text-amber-400">TBD</span>
       </div>
     )
   }
@@ -613,7 +622,7 @@ const PlayerRow = ({ player, score, isWinner }) => {
 
       <div className="flex items-center">
         {typeof score === "number" && (
-          <span className="bg-gray-100 px-2 py-1 rounded text-sm font-medium text-gray-700 mr-2">{score}</span>
+          <span className="bg-amber-100 px-2 py-1 rounded text-sm font-medium text-amber-700 mr-2">{score}</span>
         )}
 
         {isWinner && (
