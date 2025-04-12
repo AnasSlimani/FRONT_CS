@@ -422,71 +422,107 @@ const BilliardTournamentDetails = ({ activityId }) => {
 
         {hasGeneratedBracket ? (
           <div className="relative mt-8">
-            {/* Connecting Lines - SVG Background */}
-            <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }}>
-              {/* Quarter to Semi lines */}
-              <line x1="25%" y1="25%" x2="35%" y2="25%" stroke="#fef3c7" strokeWidth="3" />
-              <line x1="25%" y1="75%" x2="35%" y2="75%" stroke="#fef3c7" strokeWidth="3" />
-              <line x1="75%" y1="25%" x2="65%" y2="25%" stroke="#fef3c7" strokeWidth="3" />
-              <line x1="75%" y1="75%" x2="65%" y2="75%" stroke="#fef3c7" strokeWidth="3" />
-
-              <line x1="35%" y1="25%" x2="35%" y2="75%" stroke="#fef3c7" strokeWidth="3" />
-              <line x1="65%" y1="25%" x2="65%" y2="75%" stroke="#fef3c7" strokeWidth="3" />
-
-              {/* Semi to Final lines */}
-              <line x1="35%" y1="50%" x2="45%" y2="50%" stroke="#fef3c7" strokeWidth="3" />
-              <line x1="65%" y1="50%" x2="55%" y2="50%" stroke="#fef3c7" strokeWidth="3" />
-            </svg>
-
-            <div className="grid grid-cols-3 gap-4 relative z-10">
-              {/* Quarter Finals - Left Side */}
-              <div className="space-y-16">
-                {tournamentData.quarterFinals.slice(0, 2).map((match, idx) => (
-                  <MatchCard
-                    key={`quarter-left-${idx}`}
-                    match={match}
-                    onSelect={() => openMatchDetails("quarterFinals", idx, match)}
-                    round="Quarter-Final"
-                    matchNumber={idx + 1}
-                  />
-                ))}
-              </div>
-
-              {/* Semi Finals and Final */}
-              <div className="space-y-16 flex flex-col justify-center">
-                <div className="grid grid-cols-1 gap-32">
-                  {tournamentData.semiFinals.map((match, idx) => (
+            {/* Tournament Bracket */}
+            <div className="tournament-bracket">
+              {/* Row 1: Quarter Finals */}
+              <div className="bracket-row">
+                <div className="bracket-column left-column">
+                  <div className="bracket-header">Quarter-Final 1</div>
+                  <div className="bracket-match">
                     <MatchCard
-                      key={`semi-${idx}`}
-                      match={match}
-                      onSelect={() => openMatchDetails("semiFinals", idx, match)}
-                      round="Semi-Final"
-                      matchNumber={idx + 1}
+                      match={tournamentData.quarterFinals[0]}
+                      onSelect={() => openMatchDetails("quarterFinals", 0, tournamentData.quarterFinals[0])}
                     />
-                  ))}
+                  </div>
                 </div>
-                <div className="mt-8">
-                  <MatchCard
-                    match={tournamentData.finalMatch}
-                    onSelect={() => openMatchDetails("final", 0, tournamentData.finalMatch)}
-                    round="Final"
-                    matchNumber={1}
-                    isFinal={true}
-                  />
+
+                <div className="bracket-column center-column">
+                  <div className="bracket-header">Semi-Final 1</div>
+                  <div className="bracket-match">
+                    <MatchCard
+                      match={tournamentData.semiFinals[0]}
+                      onSelect={() => openMatchDetails("semiFinals", 0, tournamentData.semiFinals[0])}
+                    />
+                  </div>
+                </div>
+
+                <div className="bracket-column right-column">
+                  <div className="bracket-header">Quarter-Final 3</div>
+                  <div className="bracket-match">
+                    <MatchCard
+                      match={tournamentData.quarterFinals[2]}
+                      onSelect={() => openMatchDetails("quarterFinals", 2, tournamentData.quarterFinals[2])}
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Quarter Finals - Right Side */}
-              <div className="space-y-16">
-                {tournamentData.quarterFinals.slice(2, 4).map((match, idx) => (
-                  <MatchCard
-                    key={`quarter-right-${idx}`}
-                    match={match}
-                    onSelect={() => openMatchDetails("quarterFinals", idx + 2, match)}
-                    round="Quarter-Final"
-                    matchNumber={idx + 3}
-                  />
-                ))}
+              {/* Row 2: Final */}
+              <div className="bracket-row">
+                <div className="bracket-column center-column final-column">
+                  <div className="bracket-header">Final</div>
+                  <div className="bracket-match">
+                    <MatchCard
+                      match={tournamentData.finalMatch}
+                      onSelect={() => openMatchDetails("final", 0, tournamentData.finalMatch)}
+                      isFinal={true}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 3: Quarter Finals */}
+              <div className="bracket-row">
+                <div className="bracket-column left-column">
+                  <div className="bracket-header">Quarter-Final 2</div>
+                  <div className="bracket-match">
+                    <MatchCard
+                      match={tournamentData.quarterFinals[1]}
+                      onSelect={() => openMatchDetails("quarterFinals", 1, tournamentData.quarterFinals[1])}
+                    />
+                  </div>
+                </div>
+
+                <div className="bracket-column center-column">
+                  <div className="bracket-header">Semi-Final 2</div>
+                  <div className="bracket-match">
+                    <MatchCard
+                      match={tournamentData.semiFinals[1]}
+                      onSelect={() => openMatchDetails("semiFinals", 1, tournamentData.semiFinals[1])}
+                    />
+                  </div>
+                </div>
+
+                <div className="bracket-column right-column">
+                  <div className="bracket-header">Quarter-Final 4</div>
+                  <div className="bracket-match">
+                    <MatchCard
+                      match={tournamentData.quarterFinals[3]}
+                      onSelect={() => openMatchDetails("quarterFinals", 3, tournamentData.quarterFinals[3])}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Connecting Lines */}
+              <div className="bracket-lines">
+                {/* Left side vertical lines */}
+                <div className="line vertical-line left-v-line-1"></div>
+                <div className="line vertical-line left-v-line-2"></div>
+
+                {/* Right side vertical lines */}
+                <div className="line vertical-line right-v-line-1"></div>
+                <div className="line vertical-line right-v-line-2"></div>
+
+                {/* Horizontal lines */}
+                <div className="line horizontal-line left-h-line-1"></div>
+                <div className="line horizontal-line left-h-line-2"></div>
+                <div className="line horizontal-line right-h-line-1"></div>
+                <div className="line horizontal-line right-h-line-2"></div>
+
+                {/* Semi to Final lines */}
+                <div className="line horizontal-line semi-final-line-1"></div>
+                <div className="line horizontal-line semi-final-line-2"></div>
               </div>
             </div>
           </div>
@@ -549,12 +585,132 @@ const BilliardTournamentDetails = ({ activityId }) => {
           </motion.div>
         )}
       </div>
+
+      {/* CSS for tournament bracket */}
+      <style jsx>{`
+        .tournament-bracket {
+          position: relative;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 40px;
+        }
+        
+        .bracket-row {
+          display: flex;
+          justify-content: space-between;
+          position: relative;
+          z-index: 1;
+        }
+        
+        .bracket-column {
+          width: 30%;
+        }
+        
+        .center-column {
+          width: 30%;
+        }
+        
+        .final-column {
+          margin: 0 auto;
+        }
+        
+        .bracket-header {
+          font-weight: 600;
+          color: #92400e;
+          margin-bottom: 10px;
+          padding: 5px;
+          background-color: #fef3c7;
+          border-radius: 6px;
+          text-align: center;
+        }
+        
+        .bracket-match {
+          margin-bottom: 20px;
+        }
+        
+        /* Connecting lines */
+        .bracket-lines {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 0;
+          pointer-events: none;
+        }
+        
+        .line {
+          position: absolute;
+          background-color: #fef3c7;
+          z-index: 0;
+        }
+        
+        .vertical-line {
+          width: 3px;
+        }
+        
+        .horizontal-line {
+          height: 3px;
+        }
+        
+        /* Left side lines */
+        .left-v-line-1 {
+          left: 30%;
+          top: 15%;
+          height: 70%;
+        }
+        
+        .left-h-line-1 {
+          left: 30%;
+          top: 15%;
+          width: 5%;
+        }
+        
+        .left-h-line-2 {
+          left: 30%;
+          top: 85%;
+          width: 5%;
+        }
+        
+        /* Right side lines */
+        .right-v-line-1 {
+          right: 30%;
+          top: 15%;
+          height: 70%;
+        }
+        
+        .right-h-line-1 {
+          right: 30%;
+          top: 15%;
+          width: 5%;
+        }
+        
+        .right-h-line-2 {
+          right: 30%;
+          top: 85%;
+          width: 5%;
+        }
+        
+        /* Semi to Final lines */
+        .semi-final-line-1 {
+          left: 35%;
+          top: 50%;
+          width: 10%;
+        }
+        
+        .semi-final-line-2 {
+          right: 35%;
+          top: 50%;
+          width: 10%;
+        }
+      `}</style>
     </div>
   )
 }
 
 // Match Card Component
-const MatchCard = ({ match, onSelect, round, matchNumber, isFinal = false }) => {
+const MatchCard = ({ match, onSelect, isFinal = false }) => {
   const hasPlayers = match.player1 !== null || match.player2 !== null
   const hasWinner = match.winner !== null
   const canSelect = match.player1 && match.player2 && !hasWinner
@@ -570,12 +726,6 @@ const MatchCard = ({ match, onSelect, round, matchNumber, isFinal = false }) => 
       onClick={() => canSelect && onSelect()}
       whileHover={canSelect ? { y: -5 } : {}}
     >
-      <div className={`p-3 border-b ${isFinal ? "bg-amber-100 border-amber-200" : "bg-amber-50 border-amber-100"}`}>
-        <h4 className={`text-sm font-medium ${isFinal ? "text-amber-800" : "text-amber-700"}`}>
-          {round} {matchNumber}
-        </h4>
-      </div>
-
       <div className="p-4">
         {hasPlayers ? (
           <>
