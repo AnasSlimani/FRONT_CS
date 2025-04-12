@@ -5,6 +5,8 @@ import { ArrowLeft, Calendar, Clock, MapPin, Users, Trophy, Loader2, AlertCircle
 import api from "@/app/api/axios"
 import { motion } from "framer-motion"
 import TournamentDetails from "./tournament/TournamentDetails"
+import BilliardTournamentDetails from "./tournament/BilliardTournamentDetails"
+import FriendlyMatchDetails from "./tournament/FriendlyMatchDetails"
 
 const ActivityDetails = ({ activityId, onBack }) => {
   const [activity, setActivity] = useState(null)
@@ -58,8 +60,11 @@ const ActivityDetails = ({ activityId, onBack }) => {
     )
   }
 
-  // Check if this is a football tournament
-  const isFootballTournament = activity.type === "tournament" && activity.sport === "football"
+  // Check activity type and sport
+  const isFootballTournament =
+    activity.type === "tournament" && (activity.sport === "football" || activity.sport === "basketball")
+  const isBilliardTournament = activity.type === "tournament" && activity.sport === "billard"
+  const isFriendlyMatch = activity.type === "matchAmical"
 
   return (
     <div className="space-y-6">
@@ -138,7 +143,7 @@ const ActivityDetails = ({ activityId, onBack }) => {
             </div>
           </div>
 
-          {/* Tournament management section - only shown for football tournaments */}
+          {/* Conditional rendering based on activity type and sport */}
           {isFootballTournament && activity.isTournamentFull && (
             <div className="mt-8">
               <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
@@ -146,6 +151,26 @@ const ActivityDetails = ({ activityId, onBack }) => {
                 Tournament Management
               </h3>
               <TournamentDetails activityId={activity.id} />
+            </div>
+          )}
+
+          {isBilliardTournament && activity.isTournamentFull && (
+            <div className="mt-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <Trophy className="h-5 w-5 mr-2 text-amber-500" />
+                Billiard Tournament Management
+              </h3>
+              <BilliardTournamentDetails activityId={activity.id} />
+            </div>
+          )}
+
+          {isFriendlyMatch && activity.isTournamentFull && (
+            <div className="mt-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <Users className="h-5 w-5 mr-2 text-blue-500" />
+                Friendly Match Management
+              </h3>
+              <FriendlyMatchDetails activityId={activity.id} />
             </div>
           )}
         </div>

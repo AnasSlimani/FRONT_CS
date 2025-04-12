@@ -199,13 +199,16 @@ export default function Activities() {
           {activeDropdown === activity.id && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
               <div className="py-1">
-                <button
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                  onClick={() => handleViewDetails(activity)}
-                >
-                  <Eye className="h-4 w-4 mr-2 text-gray-500" />
-                  View Details
-                </button>
+                {/* Only show View Details for tournament and matchAmical types */}
+                {activity.type !== "deplacement" && (
+                  <button
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    onClick={() => handleViewDetails(activity)}
+                  >
+                    <Eye className="h-4 w-4 mr-2 text-gray-500" />
+                    View Details
+                  </button>
+                )}
                 <button
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                   onClick={() => handleEditClick(activity)}
@@ -324,7 +327,6 @@ export default function Activities() {
     )
   }
 
-  
   if (selectedActivityId) {
     return <ActivityDetails activityId={selectedActivityId} onBack={() => setSelectedActivityId(null)} />
   }
