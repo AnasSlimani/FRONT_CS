@@ -1,34 +1,35 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import Sidebar from "./Sidebar"
-import Dashboard from "./Dashboard"
-import Adherents from "./Adherents"
-import Activities from "./Activities"
-import Commandes from "./Commandes"
-import ProfilAdmin from "./ProfilAdmin"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import Sidebar from "./Sidebar";
+import Dashboard from "./Dashboard";
+import Adherents from "./Adherents";
+import Activities from "./Activities";
+import Commandes from "./Commandes";
+import ProfilAdmin from "./ProfilAdmin";
+import Products from "./Products";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState("dashboard")
-  const [isLoading, setIsLoading] = useState(true)
-  const [adminUser, setAdminUser] = useState(null)
-  const router = useRouter()
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [isLoading, setIsLoading] = useState(true);
+  const [adminUser, setAdminUser] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
     // Check if user is logged in and is an admin
-    const token = localStorage.getItem("token")
+    const token = localStorage.getItem("token");
 
     // For development, we'll skip the authentication check
     setAdminUser({
       username: "Admin User",
       email: "admin@example.com",
       role: "ADMIN",
-    })
+    });
 
-    setIsLoading(false)
-  }, [])
+    setIsLoading(false);
+  }, []);
 
   // Animation variants for page transitions
   const pageVariants = {
@@ -43,7 +44,7 @@ export default function AdminDashboard() {
       x: 20,
       transition: { duration: 0.2 },
     },
-  }
+  };
 
   // Render the active component based on the selected tab
   const renderContent = () => {
@@ -52,24 +53,26 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-center h-screen">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-teal-500"></div>
         </div>
-      )
+      );
     }
 
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard />
+        return <Dashboard />;
       case "adherents":
-        return <Adherents />
+        return <Adherents />;
       case "activities":
-        return <Activities />
+        return <Activities />;
       case "commandes":
-        return <Commandes />
+        return <Commandes />;
       case "profile":
-        return <ProfilAdmin user={adminUser} />
+        return <ProfilAdmin user={adminUser} />;
+      case "products":
+        return <Products />;
       default:
-        return <Dashboard />
+        return <Dashboard />;
     }
-  }
+  };
 
   return (
     <div className="flex flex-col md:flex-row h-screen overflow-hidden">
@@ -88,6 +91,5 @@ export default function AdminDashboard() {
         {renderContent()}
       </motion.main>
     </div>
-  )
+  );
 }
-
