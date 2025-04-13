@@ -23,31 +23,31 @@ import CreateActivityModal from "@/components/dashboardadmin/modals/CreateActivi
 import EditActivityModal from "@/components/dashboardadmin/modals/EditActivityModal"
 import ActivityDetails from "./ActivityDetails"
 
-export default function Activities() {
-  const [activities, setActivities] = useState([])
-  const [filteredActivities, setFilteredActivities] = useState([])
+export default function Products() {
+  const [products, setProducts] = useState([])
+  const [filteredProducts, setFilteredProducts] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [activeType, setActiveType] = useState("all")
+  const [activeCategory, setActiveCategory] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [currentActivity, setCurrentActivity] = useState(null)
+  const [currentProduct, setCurrentProduct] = useState(null)
   const [deleteConfirmation, setDeleteConfirmation] = useState(null)
-  const [selectedActivityId, setSelectedActivityId] = useState(null)
+  const [selectedProductId, setSelectedProductId] = useState(null)
 
   // Fetch activities data
   useEffect(() => {
-    fetchActivities()
+    fetchProducts()
   }, [])
 
-  const fetchActivities = async () => {
+  const fetchProducts = async () => {
     setIsLoading(true)
     try {
-      const response = await api.get("/activities")
-      setActivities(response.data)
-      setFilteredActivities(response.data)
+      const response = await api.get("/products")
+      setProducts(response.data)
+      setFilteredProducts(response.data)
     } catch (error) {
       console.error("Error fetching activities:", error)
     } finally {
@@ -57,25 +57,25 @@ export default function Activities() {
 
   // Filter activities based on search term and active type
   useEffect(() => {
-    let filtered = activities
+    let filtered = products
 
     // Filter by type
-    if (activeType !== "all") {
-      filtered = filtered.filter((activity) => activity.type === activeType)
+    if (activeCategory !== "all") {
+      filtered = filtered.filter((product) => product.productCategory === activeCategory)
     }
 
     // Filter by search term
     if (searchTerm.trim() !== "") {
       filtered = filtered.filter(
-        (activity) =>
-          activity.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          activity.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          activity.localisation?.toLowerCase().includes(searchTerm.toLowerCase()),
+        (product) =>
+          product.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.productCategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.color?.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     }
 
     setFilteredActivities(filtered)
-  }, [searchTerm, activeType, activities])
+  }, [searchTerm, activeCategory, products])
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -88,17 +88,17 @@ export default function Activities() {
   }
 
   // Handle activity creation
-  const handleActivityCreated = (newActivity) => {
-    setActivities([...activities, newActivity])
+  const handleProductCreated = (newProduct) => {
+    setProducts([...products, newProduct])
     // Refresh activities from server to ensure we have the latest data
-    fetchActivities()
+    fetchProducts()
   }
 
   // Handle activity update
-  const handleActivityUpdated = (updatedActivity) => {
-    setActivities(activities.map((activity) => (activity.id === updatedActivity.id ? updatedActivity : activity)))
+  const handleProductUpdated = (updatedProduct) => {
+    setProducts(products.map((product) => (product.id === updatedProduct.id ? updatedProduct : product)))
     // Refresh activities from server to ensure we have the latest data
-    fetchActivities()
+    fetchProducts()
   }
 
   // Handle view details button click

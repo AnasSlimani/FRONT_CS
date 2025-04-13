@@ -5,6 +5,8 @@ import { ArrowLeft, Calendar, Clock, MapPin, Users, Trophy, Loader2, AlertCircle
 import api from "@/app/api/axios"
 import { motion } from "framer-motion"
 import TournamentDetails from "./tournament/TournamentDetails"
+import BilliardTournamentDetails from "./tournament/BilliardTournamentDetails"
+import FriendlyMatchDetails from "./tournament/FriendlyMatchDetails"
 
 const ActivityDetails = ({ activityId, onBack }) => {
   const [activity, setActivity] = useState(null)
@@ -34,32 +36,43 @@ const ActivityDetails = ({ activityId, onBack }) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />
-        <span className="ml-2 text-gray-600">Loading activity details...</span>
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-10 w-10 text-indigo-500 animate-spin mb-3" />
+          <p className="text-indigo-600 animate-pulse">Loading activity details...</p>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start">
-        <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
-        <p className="text-red-700">{error}</p>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-start">
+        <AlertCircle className="h-6 w-6 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+        <div>
+          <h3 className="text-lg font-semibold text-red-800 mb-1">Error Loading Activity</h3>
+          <p className="text-red-700">{error}</p>
+        </div>
       </div>
     )
   }
 
   if (!activity) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start">
-        <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
-        <p className="text-yellow-700">Activity not found.</p>
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 flex items-start">
+        <AlertCircle className="h-6 w-6 text-yellow-500 mt-0.5 mr-3 flex-shrink-0" />
+        <div>
+          <h3 className="text-lg font-semibold text-yellow-800 mb-1">Activity Not Found</h3>
+          <p className="text-yellow-700">The requested activity could not be found.</p>
+        </div>
       </div>
     )
   }
 
-  // Check if this is a football tournament
-  const isFootballTournament = activity.type === "tournament" && activity.sport === "football"
+  // Check activity type and sport
+  const isFootballTournament =
+    activity.type === "tournament" && (activity.sport === "football" || activity.sport === "basketball")
+  const isBilliardTournament = activity.type === "tournament" && activity.sport === "billard"
+  const isFriendlyMatch = activity.type === "matchAmical"
 
   return (
     <div className="space-y-6">
@@ -68,20 +81,20 @@ const ActivityDetails = ({ activityId, onBack }) => {
         onClick={onBack}
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
-        whileHover={{ scale: 1.03, backgroundColor: "#f59e0b" }}
-        className="mb-6 flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg shadow-md transition-all duration-300"
+        whileHover={{ scale: 1.03, backgroundColor: "#4f46e5" }}
+        className="mb-6 flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg shadow-md transition-all duration-300"
       >
         <ArrowLeft className="h-5 w-5" />
         <span className="font-medium">Back to Activities</span>
       </motion.button>
 
       {/* Activity header */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="p-6 bg-gradient-to-r from-teal-600 to-teal-700 text-white">
+      <div className="bg-white rounded-xl shadow-md overflow-hidden border border-indigo-100">
+        <div className="p-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-2xl font-bold">{activity.name}</h2>
-              <p className="mt-1 text-teal-100">{activity.description}</p>
+              <p className="mt-1 text-indigo-100">{activity.description}</p>
             </div>
             <div className="mt-4 md:mt-0 flex flex-wrap gap-3">
               <div className="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-sm flex items-center">
@@ -103,9 +116,9 @@ const ActivityDetails = ({ activityId, onBack }) => {
 
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-gray-50 p-4 rounded-lg flex items-center">
-              <div className="p-2 bg-teal-100 rounded-full mr-3">
-                <Calendar className="h-5 w-5 text-teal-600" />
+            <div className="bg-indigo-50 p-4 rounded-lg flex items-center">
+              <div className="p-2 bg-indigo-100 rounded-full mr-3">
+                <Calendar className="h-5 w-5 text-indigo-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Type</p>
@@ -114,9 +127,9 @@ const ActivityDetails = ({ activityId, onBack }) => {
             </div>
 
             {activity.sport && (
-              <div className="bg-gray-50 p-4 rounded-lg flex items-center">
-                <div className="p-2 bg-teal-100 rounded-full mr-3">
-                  <Trophy className="h-5 w-5 text-teal-600" />
+              <div className="bg-indigo-50 p-4 rounded-lg flex items-center">
+                <div className="p-2 bg-indigo-100 rounded-full mr-3">
+                  <Trophy className="h-5 w-5 text-indigo-600" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Sport</p>
@@ -125,9 +138,9 @@ const ActivityDetails = ({ activityId, onBack }) => {
               </div>
             )}
 
-            <div className="bg-gray-50 p-4 rounded-lg flex items-center">
-              <div className="p-2 bg-teal-100 rounded-full mr-3">
-                <Users className="h-5 w-5 text-teal-600" />
+            <div className="bg-indigo-50 p-4 rounded-lg flex items-center">
+              <div className="p-2 bg-indigo-100 rounded-full mr-3">
+                <Users className="h-5 w-5 text-indigo-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Participants</p>
@@ -138,14 +151,34 @@ const ActivityDetails = ({ activityId, onBack }) => {
             </div>
           </div>
 
-          {/* Tournament management section - only shown for football tournaments */}
+          {/* Conditional rendering based on activity type and sport */}
           {isFootballTournament && activity.isTournamentFull && (
             <div className="mt-8">
               <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <Trophy className="h-5 w-5 mr-2 text-teal-500" />
+                <Trophy className="h-5 w-5 mr-2 text-indigo-500" />
                 Tournament Management
               </h3>
               <TournamentDetails activityId={activity.id} />
+            </div>
+          )}
+
+          {isBilliardTournament && activity.isTournamentFull && (
+            <div className="mt-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <Trophy className="h-5 w-5 mr-2 text-amber-500" />
+                Billiard Tournament Management
+              </h3>
+              <BilliardTournamentDetails activityId={activity.id} />
+            </div>
+          )}
+
+          {isFriendlyMatch && activity.isTournamentFull && (
+            <div className="mt-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <Users className="h-5 w-5 mr-2 text-blue-500" />
+                Friendly Match Management
+              </h3>
+              <FriendlyMatchDetails activityId={activity.id} />
             </div>
           )}
         </div>

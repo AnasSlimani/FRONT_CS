@@ -49,6 +49,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
     { id: "adherents", label: "Members", icon: <Users className="w-5 h-5" /> },
     { id: "activities", label: "Activities", icon: <Calendar className="w-5 h-5" /> },
     { id: "commandes", label: "Orders", icon: <ShoppingBag className="w-5 h-5" /> },
+    { id: "products", label: "Products", icon: <ShoppingBag className="w-5 h-5" /> },
     { id: "profile", label: "Profile", icon: <User className="w-5 h-5" /> },
   ]
 
