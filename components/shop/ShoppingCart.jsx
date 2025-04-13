@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useContext, createContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMessageModal } from "@/components/ui/message-modal-provider"
 import {
   ShoppingCartIcon as CartIcon,
   Check,
@@ -20,6 +21,7 @@ export const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   // State for cart items
   const [cartItems, setCartItems] = useState([]);
+  const { showModal } = useMessageModal()
 
   // a use effect for retrieving the cart's product from th db
   useEffect(() => {
@@ -58,6 +60,7 @@ export const CartProvider = ({ children }) => {
 
   // Add item to cart
   const addToCart = async (product) => {
+    const path = window.location.pathname;
     // Check if product already exists in cart
     const existingItem = cartItems.find(
       (item) =>
@@ -88,7 +91,11 @@ export const CartProvider = ({ children }) => {
       if (response.status == 200) {
         const persistedOrder = response.data;
         console.log(persistedOrder);
-        alert("order initialised");
+        showModal({
+          message: "Your order is added to cart",
+          redirectUrl: path,
+          type: "success",
+        })
 
         // Add new product to cart
         const newItem = {
@@ -119,10 +126,9 @@ export const CartProvider = ({ children }) => {
     
     setCartItems((prev) => prev.filter((item) => item.id !== id));
     try {
-      alert("product id " + id);
       const response = await api.delete(`/orders/${id}`);
       if (response.status === 200) {
-        alert("Product deleted from the db");
+        console.log("product deleted !"); 
       }
     } catch (error) {
       console.log(error);

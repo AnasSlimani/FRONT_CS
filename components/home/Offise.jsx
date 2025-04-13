@@ -32,13 +32,13 @@ const Office = () => {
     {
       id: 2,
       name: "Thomas Dubois",
-      image: "/images/anas.jpg",
+      image: "/images/badr.jpg",
       role: "Vice-Président",
     },
     {
       id: 3,
       name: "Emma Lefebvre",
-      image: "/images/anas.jpg",
+      image: "/images/ilyass.jpg",
       role: "Trésorière",
     },
     {

@@ -10,7 +10,7 @@ import api from "@/app/api/axios"
 import { createPortal } from "react-dom"
 import { jwtDecode } from "jwt-decode"
 
-const LoginModal = ({ isOpen, onClose }) => {
+const LoginModal = ({ isOpen, onClose , path }) => {
   const [loginForm, setLoginForm] = useState({
     email: "",
     password: "",
@@ -119,7 +119,7 @@ const LoginModal = ({ isOpen, onClose }) => {
     
     // Redirect based on role
     onClose()
-    window.location.href = jwtDecode(token).role === "ADMIN" ? "/dashboardadmin" : "/"
+    window.location.href = jwtDecode(token).role === "ADMIN" ? "/dashboardadmin" : path
     
   } catch (error) {
     setError("Invalid email or password. Please try again.")

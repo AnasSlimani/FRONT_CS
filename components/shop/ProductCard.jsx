@@ -4,11 +4,20 @@ import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowUpRight, ShoppingCart } from "lucide-react"
 import { useState, useContext } from "react"
+import LoginModal from "@/components/login/LoginModal"
 import { CartContext } from "./ShoppingCart"
+import { useMessageModal } from "@/components/ui/message-modal-provider"
 
 const ProductCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false)
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const { addToCart } = useContext(CartContext)
+  const { showModal } = useMessageModal()
+  const path = window.location.pathname;
+
+  const closeLoginModal = () => {
+    setIsLoginModalOpen(false)
+  }
 
   const handleAddToCart = async (e) => {
     e.preventDefault()
@@ -16,8 +25,8 @@ const ProductCard = ({ product }) => {
 
     try {
       if (localStorage.getItem("token") == null) {
-        alert("Please login to buy this product")
-        window.location.href = "/login"
+        setIsLoginModalOpen(true)
+      return
       } else {
         // Add to cart using context
         addToCart(product)
@@ -96,6 +105,7 @@ const ProductCard = ({ product }) => {
           Add to cart
         </button>
       </div>
+      <LoginModal isOpen={isLoginModalOpen} path={path} onClose={closeLoginModal} />
     </motion.div>
   )
 }

@@ -26,6 +26,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [token, setToken] = useState(null)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  const path = window.location.pathname;
   
 
   // Handle scroll effect
@@ -419,7 +420,7 @@ export default function Navbar() {
       </nav>
 
       {/* Login Modal */}
-      <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
+      <LoginModal isOpen={isLoginModalOpen} path={path} onClose={closeLoginModal} />
     </>
   )
 }

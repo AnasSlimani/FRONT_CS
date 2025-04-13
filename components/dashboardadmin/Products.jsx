@@ -101,6 +101,8 @@ export default function Products() {
     fetchProducts()
   }
 
+  // badelt hed hna
+
   // Handle view details button click
   const handleViewDetails = (activity) => {
     setSelectedActivityId(activity.id)
