@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
-import { LayoutDashboard, Users, Calendar, ShoppingBag, User, LogOut, Menu, X, ChevronRight } from "lucide-react"
+import { LayoutDashboard, Users, Calendar, ShoppingBag,ShoppingCart, User, LogOut, Menu, X, ChevronRight } from "lucide-react"
 
 export default function Sidebar({ activeTab, setActiveTab }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -48,7 +48,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
     { id: "adherents", label: "Members", icon: <Users className="w-5 h-5" /> },
     { id: "activities", label: "Activities", icon: <Calendar className="w-5 h-5" /> },
-    { id: "commandes", label: "Orders", icon: <ShoppingBag className="w-5 h-5" /> },
+    { id: "commandes", label: "Orders", icon: <ShoppingCart className="w-5 h-5" /> },
     { id: "products", label: "Products", icon: <ShoppingBag className="w-5 h-5" /> },
     { id: "profile", label: "Profile", icon: <User className="w-5 h-5" /> },
   ]

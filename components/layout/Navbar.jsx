@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import {
@@ -26,7 +27,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [token, setToken] = useState(null)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
-  const path = window.location.pathname;
+  const path = usePathname()
   
 
   // Handle scroll effect

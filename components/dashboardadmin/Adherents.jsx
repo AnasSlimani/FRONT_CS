@@ -15,7 +15,7 @@ export default function Adherents() {
   const [showFilters, setShowFilters] = useState(false)
 
   // Number of users per page
-  const usersPerPage = 7
+  const usersPerPage = 8
 
   // Fetch adherents data
   useEffect(() => {
@@ -295,9 +295,9 @@ export default function Adherents() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{adherent.membershipType || "Standard"}</div>
+                    {/* <div className="text-sm text-gray-900">{adherent.membershipType || "Standard"}</div> */}
                     <div className="text-sm text-gray-500">
-                      Since {adherent.joinDate ? new Date(adherent.joinDate).toLocaleDateString() : "Not provided"}
+                      Since {adherent.registrationDate ? new Date(adherent.registrationDate).toLocaleDateString() : "Not provided"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

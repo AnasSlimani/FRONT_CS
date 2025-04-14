@@ -62,7 +62,7 @@ const DashboardUser = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard user={user}/>;
       case "activities":
         return <Activities />;
       case "chat":

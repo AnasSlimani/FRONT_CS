@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
-import { LayoutDashboard, Calendar, MessageSquare, User, ChevronDown, LogOut, Settings, Menu, X } from "lucide-react"
+import { LayoutDashboard,ShoppingCart, Calendar, MessageSquare, User, ChevronDown, LogOut, Settings, Menu, X } from "lucide-react"
 
 // Sample team data for the chat dropdown
 const teams = [
@@ -200,7 +200,7 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
                     }`}
                     onClick={() => handleTabClick("orders")}
                   >
-                    <User className="w-5 h-5 mr-3" />
+                    <ShoppingCart className="w-5 h-5 mr-3" />
                     <span>Orders</span>
                   </button>
                 </motion.li>

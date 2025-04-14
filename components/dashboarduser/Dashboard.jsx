@@ -2,51 +2,234 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Trophy, Users, Calendar, TrendingUp, Award, Clock, Activity, BarChart3, AlertCircle } from 'lucide-react'
 import { jwtDecode } from "jwt-decode"
 import api from "@/app/api/axios"
-import { useRouter } from "next/navigation"
+import Image from "next/image"
+import Link from "next/link"
+import {
+  Calendar,
+  ShoppingBag,
+  Target,
+  Users,
+  ChevronRight,
+  ArrowRight,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Clock,
+  Trophy,
+  Award,
+} from "lucide-react"
 
-const Dashboard = () => {
-  const router = useRouter()
-  const [username, setUsername] = useState("User")
+export default function Dashboard() {
+  const [user, setUser] = useState(null)
+  const [userId, setUserId] = useState(null)
   const [trialStatus, setTrialStatus] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [stats, setStats] = useState({
+    activitiesParticipated: 0,
+    ordersCount: 0,
+    goalsScored: 0,
+    teamsJoined: 0,
+  })
+  const [recentMatches, setRecentMatches] = useState([])
+  const [teams, setTeams] = useState([])
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Get user info from token
+  // Get current user ID from token
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (token) {
       try {
         const decoded = jwtDecode(token)
-        
-        // Fetch user data and trial status
-        const fetchUserData = async () => {
-          try {
-            setIsLoading(true)
-            const response = await api.get(`/users/${decoded.id}`)
-            setUsername(response.data.username || "User")
-            
-            // Check trial status
-            const trialResponse = await api.get(`/users/trial-status/${decoded.id}`)
-            setTrialStatus(trialResponse.data)
-          } catch (error) {
-            console.error("Error fetching user data:", error)
-          } finally {
-            setIsLoading(false)
-          }
-        }
-        
-        fetchUserData()
+        setUserId(decoded.id)
       } catch (error) {
         console.error("Error decoding token:", error)
-        setIsLoading(false)
+        setError("Authentication error. Please login again.")
       }
     } else {
-      // Redirect to login if no token
-      router.push("/")
+      setError("You are not logged in. Please login to view your dashboard.")
     }
-  }, [router])
+  }, [])
+
+  // Fetch user data
+  useEffect(() => {
+    if (!userId) return
+
+    const fetchUserData = async () => {
+      try {
+        const response = await api.get(`/users/${userId}`)
+        setUser(response.data)
+      } catch (error) {
+        console.error("Error fetching user data:", error)
+        setError("Failed to load user data")
+      }
+    }
+
+    fetchUserData()
+  }, [userId])
+
+  // Fetch trial status
+  useEffect(() => {
+    if (!userId) return
+
+    const fetchTrialStatus = async () => {
+      try {
+        const response = await api.get(`/users/trial-status/${userId}`)
+        setTrialStatus(response.data)
+      } catch (error) {
+        console.error("Error fetching trial status:", error)
+      }
+    }
+
+    fetchTrialStatus()
+  }, [userId])
+
+  // Fetch teams
+  useEffect(() => {
+    if (!userId) return
+
+    const fetchTeams = async () => {
+      try {
+        const response = await api.get(`/teams/member/${userId}`)
+        setTeams(response.data)
+        setStats((prev) => ({ ...prev, teamsJoined: response.data.length }))
+      } catch (error) {
+        console.error("Error fetching teams:", error)
+      }
+    }
+
+    fetchTeams()
+  }, [userId])
+
+  // Fetch orders
+  useEffect(() => {
+    if (!userId) return
+
+    const fetchOrders = async () => {
+      try {
+        const response = await api.get(`/orders/user/${userId}`)
+        setOrders(response.data)
+        setStats((prev) => ({ ...prev, ordersCount: response.data.length }))
+      } catch (error) {
+        console.error("Error fetching orders:", error)
+      }
+    }
+
+    fetchOrders()
+  }, [userId])
+
+  // Fetch activities, matches, and goals data
+  useEffect(() => {
+    if (!userId) return
+
+    const fetchActivitiesData = async () => {
+      try {
+        // Get all activities
+        const activitiesResponse = await api.get("/activities")
+        const activities = activitiesResponse.data
+
+        // Filter activities where user is a participant
+        const userActivities = activities.filter((activity) => {
+          // Check if user is in individual participants
+          const isIndividualParticipant = activity.individualParticipants?.some(
+            (participant) => participant.id === userId,
+          )
+
+          // Check if user is in team participants
+          const isTeamParticipant = activity.teamParticipants?.some((team) =>
+            team.members?.some((member) => member.id === userId),
+          )
+
+          return isIndividualParticipant || isTeamParticipant
+        })
+
+        setStats((prev) => ({ ...prev, activitiesParticipated: userActivities.length }))
+
+        // Get matches for activities user participated in
+        let allMatches = []
+        let allGoals = 0
+
+        for (const activity of userActivities) {
+          try {
+            // Get matches for this activity
+            const matchesResponse = await api.get(`/matches/activity/${activity.id}`)
+            const activityMatches = matchesResponse.data
+
+            // Add activity info to matches
+            const matchesWithActivity = activityMatches.map((match) => ({
+              ...match,
+              activityName: activity.name,
+              activityType: activity.type,
+            }))
+
+            allMatches = [...allMatches, ...matchesWithActivity]
+
+            // Count goals scored by user in this activity's matches
+            for (const match of activityMatches) {
+              try {
+                const goalEventsResponse = await api.get(`/goalevents/match/${match.id}`)
+                const goalEvents = goalEventsResponse.data
+
+                const userGoals = goalEvents.filter((goal) => goal.scorer?.id === userId)
+                allGoals += userGoals.length
+              } catch (error) {
+                console.error(`Error fetching goal events for match ${match.id}:`, error)
+              }
+            }
+          } catch (error) {
+            console.error(`Error fetching matches for activity ${activity.id}:`, error)
+          }
+        }
+
+        // Sort matches by date (most recent first) and take the 5 most recent
+        allMatches.sort((a, b) => new Date(b.date) - new Date(a.date))
+        setRecentMatches(allMatches.slice(0, 3))
+
+        // Update goals scored stat
+        setStats((prev) => ({
+          ...prev,
+          goalsScored: allGoals,
+        }))
+      } catch (error) {
+        console.error("Error fetching activities data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchActivitiesData()
+  }, [userId])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-900">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-emerald-500 mx-auto" />
+          <p className="mt-4 text-gray-400 font-medium">Loading your dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-900">
+        <div className="text-center max-w-md p-6 bg-gray-800 rounded-xl shadow-lg">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
+          <h2 className="mt-4 text-xl font-bold text-white">Error</h2>
+          <p className="mt-2 text-gray-400">{error}</p>
+          <button
+            className="mt-4 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+            onClick={() => (window.location.href = "/login")}
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // Animation variants
   const containerVariants = {
@@ -64,336 +247,319 @@ const Dashboard = () => {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: 0.5, ease: "easeOut" },
+      transition: { duration: 0.4, ease: "easeOut" },
     },
   }
-
-  // Handle payment button click
-  const handlePaymentClick = () => {
-    router.push("/payment")
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
-      </div>
-    )
-  }
-
-  // Sample data for statistics
-  const stats = [
-    {
-      title: "Tournaments",
-      value: "12",
-      icon: <Trophy className="w-6 h-6 text-yellow-500" />,
-      color: "from-yellow-400 to-yellow-600",
-      change: "+3 this month",
-    },
-    {
-      title: "Teams Joined",
-      value: "5",
-      icon: <Users className="w-6 h-6 text-blue-500" />,
-      color: "from-blue-400 to-blue-600",
-      change: "+1 this month",
-    },
-    {
-      title: "Upcoming Events",
-      value: "3",
-      icon: <Calendar className="w-6 h-6 text-teal-500" />,
-      color: "from-teal-400 to-teal-600",
-      change: "Next: Football Tournament",
-    },
-    {
-      title: "Performance",
-      value: "87%",
-      icon: <TrendingUp className="w-6 h-6 text-green-500" />,
-      color: "from-green-400 to-green-600",
-      change: "+12% from last month",
-    },
-  ]
-
-  // Sample data for recent achievements
-  const achievements = [
-    {
-      title: "Tournament MVP",
-      description: "Recognized as the Most Valuable Player in the Basketball Championship",
-      date: "Oct 15, 2023",
-      icon: <Award className="w-10 h-10 text-yellow-500" />,
-    },
-    {
-      title: "Team Captain",
-      description: "Appointed as captain of the Football Team Alpha",
-      date: "Sep 28, 2023",
-      icon: <Users className="w-10 h-10 text-blue-500" />,
-    },
-    {
-      title: "Perfect Attendance",
-      description: "Attended all training sessions for 3 consecutive months",
-      date: "Aug 10, 2023",
-      icon: <Clock className="w-10 h-10 text-green-500" />,
-    },
-  ]
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto">
-      {/* Trial notification banner */}
-      {trialStatus && !trialStatus.isContributed && (
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-md shadow-md"
-        >
-          <div className="flex items-start">
-            <AlertCircle className="h-6 w-6 text-amber-500 mr-3 mt-0.5" />
-            <div className="flex-1">
-              {trialStatus.status === "trial" ? (
-                <>
-                  <h3 className="text-lg font-medium text-amber-800">Your free trial is active</h3>
-                  <p className="text-amber-700 mb-2">
-                    You have <span className="font-bold">{trialStatus.daysRemaining} days</span> remaining in your free trial. 
-                    Complete your membership payment to continue accessing all features after your trial ends.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h3 className="text-lg font-medium text-red-800">Your trial has expired</h3>
-                  <p className="text-red-700 mb-2">
-                    Your free trial period has ended. Please complete your membership payment to continue 
-                    accessing all features and to prevent your account from being deleted.
-                  </p>
-                </>
-              )}
-              <button 
-                onClick={handlePaymentClick}
-                className="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors"
-              >
-                Complete Membership Payment
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Welcome section */}
-      <motion.div variants={itemVariants} className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white">
-          Welcome back, <span className="text-teal-600">{username}!</span>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="max-w-7xl mx-auto px-4 py-8 bg-gray-900 text-white font-sans"
+    >
+      {/* Welcome Header */}
+      <motion.div variants={itemVariants} className="mb-6">
+        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
+          Welcome back, {user?.username || "Player"}!
         </h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2">
-          Here's what's happening with your sporting activities today.
-        </p>
-      </motion.div>
 
-      {/* Stats grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <motion.div
-            key={index}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
-            whileHover={{ y: -5, transition: { duration: 0.2 } }}
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">{stat.title}</h3>
-                <div className={`p-2 rounded-lg bg-gradient-to-br ${stat.color} bg-opacity-10`}>{stat.icon}</div>
-              </div>
-              <div className="flex items-end justify-between">
+        {trialStatus && (
+          <div className="mt-4">
+            {trialStatus.status === "trial" && (
+              <div className="bg-yellow-500/20 text-yellow-400 px-4 py-3 rounded-lg flex items-start">
+                <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-3xl font-bold text-gray-800 dark:text-white">{stat.value}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{stat.change}</p>
-                </div>
-                <div className="h-12 w-24">
-                  {/* Placeholder for mini chart */}
-                  <div className="h-full w-full flex items-end space-x-1">
-                    {[40, 70, 30, 60, 50, 80, 90].map((height, i) => (
-                      <div
-                        key={i}
-                        className={`w-2 bg-gradient-to-t ${stat.color} rounded-t-sm`}
-                        style={{ height: `${height}%` }}
-                      ></div>
-                    ))}
-                  </div>
+                  <p className="font-medium">Trial Period Active</p>
+                  <p className="text-sm mt-1">
+                    You have {trialStatus.daysRemaining} days remaining in your trial.
+                    <Link href="/payment" className="ml-1 underline hover:text-yellow-300">
+                      Upgrade now
+                    </Link>
+                  </p>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            )}
+
+            {trialStatus.status === "expired" && (
+              <div className="bg-red-500/20 text-red-400 px-4 py-3 rounded-lg flex items-start">
+                <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">Trial Period Expired</p>
+                  <p className="text-sm mt-1">
+                    Your trial has ended.
+                    <Link href="/payment" className="ml-1 underline hover:text-red-300">
+                      Upgrade to continue enjoying all features
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {trialStatus.status === "active" && (
+              <div className="bg-emerald-500/20 text-emerald-400 px-4 py-3 rounded-lg flex items-start">
+                <CheckCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">Full Membership Active</p>
+                  <p className="text-sm mt-1">Thank you for being a valued member of our club!</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </motion.div>
 
-      {/* Activity and Achievements section */}
+      {/* Summary Stats */}
+      <motion.div variants={itemVariants} className="mb-8">
+        <h2 className="text-xl font-bold mb-4 flex items-center">
+          <Award className="mr-2 h-5 w-5 text-emerald-500" />
+          <span>Your Stats</span>
+        </h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 to-purple-900 p-6 rounded-xl shadow-xl border border-indigo-700/30 group hover:shadow-indigo-900/20 hover:scale-[1.02] transition-all duration-300">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-indigo-600/20 blur-xl"></div>
+            <div className="absolute -left-6 -bottom-6 w-24 h-24 rounded-full bg-purple-600/20 blur-xl"></div>
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white mb-4 shadow-lg shadow-indigo-900/30 group-hover:scale-110 transition-transform duration-300">
+              <Calendar className="h-6 w-6" />
+            </div>
+            <p className="text-indigo-300 text-sm font-medium uppercase tracking-wider">Activities</p>
+            <p className="text-4xl font-bold text-white mt-1 font-display">{stats.activitiesParticipated}</p>
+          </div>
+
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 to-cyan-900 p-6 rounded-xl shadow-xl border border-blue-700/30 group hover:shadow-blue-900/20 hover:scale-[1.02] transition-all duration-300">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-blue-600/20 blur-xl"></div>
+            <div className="absolute -left-6 -bottom-6 w-24 h-24 rounded-full bg-cyan-600/20 blur-xl"></div>
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 text-white mb-4 shadow-lg shadow-blue-900/30 group-hover:scale-110 transition-transform duration-300">
+              <ShoppingBag className="h-6 w-6" />
+            </div>
+            <p className="text-blue-300 text-sm font-medium uppercase tracking-wider">Orders</p>
+            <p className="text-4xl font-bold text-white mt-1 font-display">{stats.ordersCount}</p>
+          </div>
+
+          <div className="relative overflow-hidden bg-gradient-to-br from-emerald-900 to-green-900 p-6 rounded-xl shadow-xl border border-emerald-700/30 group hover:shadow-emerald-900/20 hover:scale-[1.02] transition-all duration-300">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-emerald-600/20 blur-xl"></div>
+            <div className="absolute -left-6 -bottom-6 w-24 h-24 rounded-full bg-green-600/20 blur-xl"></div>
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white mb-4 shadow-lg shadow-emerald-900/30 group-hover:scale-110 transition-transform duration-300">
+              <Target className="h-6 w-6" />
+            </div>
+            <p className="text-emerald-300 text-sm font-medium uppercase tracking-wider">Goals</p>
+            <p className="text-4xl font-bold text-white mt-1 font-display">{stats.goalsScored}</p>
+          </div>
+
+          <div className="relative overflow-hidden bg-gradient-to-br from-amber-900 to-orange-900 p-6 rounded-xl shadow-xl border border-amber-700/30 group hover:shadow-amber-900/20 hover:scale-[1.02] transition-all duration-300">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-amber-600/20 blur-xl"></div>
+            <div className="absolute -left-6 -bottom-6 w-24 h-24 rounded-full bg-orange-600/20 blur-xl"></div>
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white mb-4 shadow-lg shadow-amber-900/30 group-hover:scale-110 transition-transform duration-300">
+              <Users className="h-6 w-6" />
+            </div>
+            <p className="text-amber-300 text-sm font-medium uppercase tracking-wider">Teams</p>
+            <p className="text-4xl font-bold text-white mt-1 font-display">{stats.teamsJoined}</p>
+          </div>
+        </div>
+      </motion.div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Activity chart */}
-        <motion.div
-          variants={itemVariants}
-          className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center">
-              <Activity className="w-5 h-5 mr-2 text-teal-500" />
-              Activity Overview
-            </h2>
-            <div className="flex space-x-2">
-              <button className="px-3 py-1 text-sm bg-teal-100 text-teal-700 rounded-md dark:bg-teal-700 dark:text-teal-100">
-                Weekly
-              </button>
-              <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md dark:bg-gray-700 dark:text-gray-300">
-                Monthly
-              </button>
+        {/* Recent Matches */}
+        <motion.div variants={itemVariants} className="lg:col-span-2">
+          <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700/50">
+            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+              <h2 className="text-lg font-bold flex items-center">
+                <Trophy className="mr-2 h-5 w-5 text-emerald-500" />
+                Recent Matches Played
+              </h2>
+              <Link href="/matches" className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center">
+                View all <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
             </div>
-          </div>
 
-          {/* Activity chart placeholder */}
-          <div className="h-64 w-full">
-            <div className="h-full w-full flex items-end justify-between px-4">
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => (
-                <div key={i} className="flex flex-col items-center space-y-2">
-                  <div
-                    className="w-12 bg-gradient-to-t from-teal-500 to-teal-300 rounded-t-lg"
-                    style={{ height: `${Math.random() * 70 + 30}%` }}
-                  ></div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{day}</span>
+            <div className="p-4">
+              {recentMatches.length > 0 ? (
+                <div className="space-y-4">
+                  {recentMatches.map((match, index) => (
+                    <div
+                      key={match.id || index}
+                      className="bg-gray-750 rounded-lg p-4 hover:bg-gray-700/50 transition-colors"
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs text-gray-400">
+                          {new Date(match.date).toLocaleDateString()} • {match.activityType}
+                        </span>
+                        <span className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-full">
+                          {match.status || "Completed"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center shadow-md">
+                            <span className="font-bold text-sm text-white">
+                              {match.teamA?.name?.substring(0, 2) || "T1"}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-medium">{match.teamA?.name || "Team A"}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                          <div className="text-center">
+                            <div className="text-xl font-bold bg-gray-700 px-4 py-1 rounded-lg">
+                              {match.scoreTeamA || 0} - {match.scoreTeamB || 0}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                          <div>
+                            <p className="font-medium text-right">{match.teamB?.name || "Team B"}</p>
+                          </div>
+                          <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center shadow-md">
+                            <span className="font-bold text-sm text-white">
+                              {match.teamB?.name?.substring(0, 2) || "T2"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {match.activityName && (
+                        <div className="mt-3 text-xs text-gray-400 flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {match.activityName}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 mt-6">
-            <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Hours</p>
-              <p className="text-xl font-bold text-gray-800 dark:text-white">24.5</p>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Sessions</p>
-              <p className="text-xl font-bold text-gray-800 dark:text-white">12</p>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Avg. Duration</p>
-              <p className="text-xl font-bold text-gray-800 dark:text-white">2.1h</p>
+              ) : (
+                <div className="text-center py-8">
+                  <Calendar className="h-12 w-12 mx-auto text-gray-600 mb-3" />
+                  <p className="text-gray-400">No recent matches found</p>
+                  <p className="text-sm text-gray-500 mt-1">Join an activity to start playing</p>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
 
-        {/* Recent achievements */}
-        <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center">
-              <Award className="w-5 h-5 mr-2 text-yellow-500" />
-              Recent Achievements
-            </h2>
-            <button className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 text-sm font-medium">
-              View All
-            </button>
-          </div>
+        {/* Your Teams */}
+        <motion.div variants={itemVariants}>
+          <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700/50">
+            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+              <h2 className="text-lg font-bold flex items-center">
+                <Users className="mr-2 h-5 w-5 text-emerald-500" />
+                Your Teams
+              </h2>
+              <Link href="/teams" className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center">
+                View all <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
 
-          <div className="space-y-6">
-            {achievements.map((achievement, index) => (
-              <motion.div
-                key={index}
-                className="flex items-start space-x-4"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 + 0.5 }}
-              >
-                <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">{achievement.icon}</div>
-                <div>
-                  <h3 className="font-semibold text-gray-800 dark:text-white">{achievement.title}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{achievement.description}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{achievement.date}</p>
+            <div className="p-4">
+              {teams.length > 0 ? (
+                <div className="space-y-4">
+                  {teams.map((team) => (
+                    <div key={team.id} className="bg-gray-750 rounded-lg p-4 hover:bg-gray-700/50 transition-colors">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-full flex items-center justify-center mr-4 shadow-lg">
+                          <span className="font-bold text-white">{team.name?.substring(0, 2) || "T"}</span>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white">{team.name}</h3>
+                          <p className="text-sm text-gray-400 mt-1">
+                            {team.captain?.id === userId ? (
+                              <span className="text-yellow-400 font-medium">Captain</span>
+                            ) : (
+                              <span>Member</span>
+                            )}
+                            {team.members && ` • ${team.members.length} members`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </motion.div>
-            ))}
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 mx-auto text-gray-600 mb-3" />
+                  <p className="text-gray-400">You haven't joined any teams yet</p>
+                  <p className="text-sm text-gray-500 mt-1">Join a team to play matches</p>
+                </div>
+              )}
+            </div>
           </div>
 
-          <button className="w-full mt-6 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-teal-700 transition-colors duration-300">
-            Complete Challenges
-          </button>
+          {/* Recent Orders */}
+          <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700/50 mt-8">
+            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+              <h2 className="text-lg font-bold flex items-center">
+                <ShoppingBag className="mr-2 h-5 w-5 text-emerald-500" />
+                Recent Orders
+              </h2>
+              <Link href="/orders" className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center">
+                View all <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
+
+            <div className="p-4">
+              {orders.length > 0 ? (
+                <div className="space-y-3">
+                  {orders.slice(0, 3).map((order) => (
+                    <div key={order._id} className="bg-gray-750 rounded-lg p-4 hover:bg-gray-700/50 transition-colors">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 relative rounded-lg overflow-hidden mr-4 border border-gray-600">
+                          <Image
+                            src={`/images/productImages/${order.productImage || "blackPolo.jpeg"}`}
+                            alt={order.productName || "Product"}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-white">{order.productName || "Product"}</p>
+                          <div className="flex justify-between mt-1">
+                            <p className="text-sm text-gray-400">
+                              {order.size || "M"} • {order.color || "Black"}
+                            </p>
+                            <p className="font-medium text-emerald-400">
+                              {order.productPrice ? (order.productPrice / 100).toFixed(2) : "29.99"}€
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex justify-between items-center text-xs">
+                        <span
+                          className={`px-2 py-1 rounded-full ${
+                            order.status === "completed"
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : order.status === "pending"
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : "bg-gray-500/20 text-gray-400"
+                          }`}
+                        >
+                          {order.status || "Pending"}
+                        </span>
+                        <span className="text-gray-400">{new Date().toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <ShoppingBag className="h-12 w-12 mx-auto text-gray-600 mb-3" />
+                  <p className="text-gray-400">No orders yet</p>
+                  <Link
+                    href="/shop"
+                    className="text-sm text-emerald-400 hover:text-emerald-300 mt-2 inline-flex items-center"
+                  >
+                    Visit shop <ArrowRight className="h-4 w-4 ml-1" />
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
         </motion.div>
       </div>
-
-      {/* Performance section */}
-      <motion.div variants={itemVariants} className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center">
-            <BarChart3 className="w-5 h-5 mr-2 text-teal-500" />
-            Performance Metrics
-          </h2>
-          <div className="flex space-x-2">
-            <select className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-md px-3 py-1 text-sm">
-              <option>Last 3 Months</option>
-              <option>Last 6 Months</option>
-              <option>Last Year</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Skill radar chart placeholder */}
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex items-center justify-center">
-            <div className="relative w-40 h-40">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-32 h-32 rounded-full border-4 border-dashed border-gray-200 dark:border-gray-600"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-24 h-24 rounded-full border-4 border-dashed border-gray-200 dark:border-gray-600"></div>
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full border-4 border-dashed border-gray-200 dark:border-gray-600"></div>
-                </div>
-
-                {/* Skill points */}
-                {[
-                  { name: "Speed", value: 0.8, angle: 0 },
-                  { name: "Strength", value: 0.7, angle: 72 },
-                  { name: "Technique", value: 0.9, angle: 144 },
-                  { name: "Teamwork", value: 0.85, angle: 216 },
-                  { name: "Endurance", value: 0.75, angle: 288 },
-                ].map((skill, i) => (
-                  <div
-                    key={i}
-                    className="absolute"
-                    style={{
-                      transform: `rotate(${skill.angle}deg) translateY(-${skill.value * 60}px) rotate(-${skill.angle}deg)`,
-                    }}
-                  >
-                    <div className="w-3 h-3 bg-teal-500 rounded-full"></div>
-                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                      {skill.name}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Progress bars */}
-          <div className="md:col-span-2 space-y-4">
-            {[
-              { name: "Football", progress: 85, color: "bg-blue-500" },
-              { name: "Basketball", progress: 70, color: "bg-orange-500" },
-              { name: "Billard", progress: 90, color: "bg-green-500" },
-              { name: "Team Leadership", progress: 75, color: "bg-purple-500" },
-            ].map((skill, i) => (
-              <div key={i} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{skill.name}</span>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{skill.progress}%</span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
-                  <motion.div
-                    className={`h-2.5 rounded-full ${skill.color}`}
-                    style={{ width: `${skill.progress}%` }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${skill.progress}%` }}
-                    transition={{ duration: 1, delay: 0.5 + i * 0.1 }}
-                  ></motion.div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
     </motion.div>
   )
 }
-
-export default Dashboard

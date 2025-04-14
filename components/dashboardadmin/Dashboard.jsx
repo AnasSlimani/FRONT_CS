@@ -37,13 +37,15 @@ export default function Dashboard() {
         const nbrTrips =await api.get('/activities/count?type=deplacement',{public:true});
         const nbrFriendlyMatches =await api.get('/activities/count?type=matchAmical',{public:true});
         const nbrOrders = await api.get('/orders/count',{public:true});
+        const revenus = await api.get('/orders/status/completed', { public: true });
+        const totalRevenue = revenus.data.reduce((sum, order) => sum + (order.price || 0), 0);
         setStats({
             adherents: { count: nbrUsers.data , trend: 5.2 },
             tournaments: { count: nbrTournaments.data , trend: 12.5 },
             trips: { count: nbrTrips.data, trend: -3.8 },
             friendlyMatches: { count: nbrFriendlyMatches.data , trend: 7.1 },
             orders: { count: nbrOrders.data, trend: 9.3 },
-            revenue: { amount: 12580, trend: 15.7 },
+            revenue: { amount: totalRevenue, trend: 15.7 },
           })
         
       } catch (error) {
@@ -133,21 +135,31 @@ export default function Dashboard() {
 
   // Recent activity component
   const RecentActivity = () => {
-    const activities = [
-      { id: 1, type: "tournament", title: "Football Tournament", date: "June 15, 2023", status: "Completed" },
-      { id: 2, type: "trip", title: "Trip to Marseille", date: "June 22, 2023", status: "In Progress" },
-      { id: 3, type: "match", title: "Friendly Match vs. Neighbor Club", date: "June 28, 2023", status: "Upcoming" },
-      { id: 4, type: "order", title: "Order #12345", date: "June 30, 2023", status: "Delivered" },
-      { id: 5, type: "tournament", title: "Basketball Tournament", date: "July 5, 2023", status: "Upcoming" },
-    ]
-
+    const [activities, setActivities] = useState([])
+    const [loading, setLoading] = useState(true)
+  
+    useEffect(() => {
+      const fetchActivities = async () => {
+        try {
+          const response = await api.get("/activities")
+          setActivities(response.data.slice(0, 5))
+        } catch (error) {
+          console.error("Failed to load recent activities:", error)
+        } finally {
+          setLoading(false)
+        }
+      }
+  
+      fetchActivities()
+    }, [])
+  
     const getIcon = (type) => {
       switch (type) {
         case "tournament":
           return <Trophy className="w-5 h-5 text-yellow-500" />
-        case "trip":
+        case "deplacement":
           return <MapPin className="w-5 h-5 text-red-500" />
-        case "match":
+        case "matchAmical":
           return <Activity className="w-5 h-5 text-blue-500" />
         case "order":
           return <ShoppingBag className="w-5 h-5 text-purple-500" />
@@ -155,22 +167,20 @@ export default function Dashboard() {
           return <Calendar className="w-5 h-5 text-gray-500" />
       }
     }
-
-    const getStatusColor = (status) => {
-      switch (status) {
-        case "Completed":
-          return "bg-gray-100 text-gray-800"
-        case "In Progress":
-          return "bg-blue-100 text-blue-800"
-        case "Upcoming":
-          return "bg-green-100 text-green-800"
-        case "Delivered":
-          return "bg-purple-100 text-purple-800"
-        default:
-          return "bg-gray-100 text-gray-800"
-      }
+  
+    // 🟦 Modify this function to return color based on isTournamentFull
+    const getStatusBadge = (isFull) => {
+      const status = isFull ? "Completed" : "In Progress"
+      const colorClass = isFull
+        ? "bg-green-100 text-green-800"
+        : "bg-blue-100 text-blue-800"
+      return (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
+          {status}
+        </span>
+      )
     }
-
+  
     return (
       <motion.div
         variants={itemVariants}
@@ -179,26 +189,32 @@ export default function Dashboard() {
         <div className="p-6">
           <h2 className="text-lg font-bold text-gray-800 mb-4">Recent Activities</h2>
           <div className="space-y-4">
-            {activities.map((activity) => (
-              <div key={activity.id} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                <div className="mr-4">{getIcon(activity.type)}</div>
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-800">{activity.title}</h3>
-                  <p className="text-sm text-gray-500 flex items-center">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {activity.date}
-                  </p>
+            {loading ? (
+              <p className="text-gray-500">Loading...</p>
+            ) : activities.length === 0 ? (
+              <p className="text-gray-500">No recent activities found.</p>
+            ) : (
+              activities.map((activity) => (
+                <div key={activity.id || activity._id} className="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="mr-4">{getIcon(activity.type)}</div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-800">{activity.title}</h3>
+                    <p className="text-sm text-gray-500 flex items-center">
+                      <Clock className="w-3 h-3 mr-1" />
+                      {activity.date}
+                    </p>
+                  </div>
+                  {getStatusBadge(activity.isTournamentFull)}
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
-                  {activity.status}
-                </span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </motion.div>
     )
   }
+  
+
 
   if (isLoading) {
     return (
