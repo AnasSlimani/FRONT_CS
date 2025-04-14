@@ -191,6 +191,19 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
                     )}
                   </AnimatePresence>
                 </motion.li>
+                
+                {/* Orders */}
+                <motion.li custom={3} variants={itemVariants} initial="hidden" animate="visible">
+                  <button
+                    className={`flex items-center w-full p-3 rounded-lg transition-colors duration-200 ${
+                      activeTab === "orders" ? "bg-teal-600 text-white" : "text-gray-300 hover:bg-gray-700"
+                    }`}
+                    onClick={() => handleTabClick("orders")}
+                  >
+                    <User className="w-5 h-5 mr-3" />
+                    <span>Orders</span>
+                  </button>
+                </motion.li>
 
                 {/* Profile */}
                 <motion.li custom={3} variants={itemVariants} initial="hidden" animate="visible">

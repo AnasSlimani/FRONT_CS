@@ -1,46 +1,47 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import Sidebar from "./Sidebar"
-import Dashboard from "./Dashboard"
-import Activities from "./Activities"
-import Chat from "./Chat"
-import Profile from "./Profile"
-import { jwtDecode } from "jwt-decode"
-import api from "@/app/api/axios"
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import Sidebar from "./Sidebar";
+import Dashboard from "./Dashboard";
+import Activities from "./Activities";
+import Orders from "./Orders";
+import Chat from "./Chat";
+import Profile from "./Profile";
+import { jwtDecode } from "jwt-decode";
+import api from "@/app/api/axios";
 
 const DashboardUser = () => {
-  const [activeTab, setActiveTab] = useState("dashboard")
-  const [isMounted, setIsMounted] = useState(false)
-  const [user, setUser] = useState({})
-  const [currentUserId, setCurrentUserId] = useState(null)
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [isMounted, setIsMounted] = useState(false);
+  const [user, setUser] = useState({});
+  const [currentUserId, setCurrentUserId] = useState(null);
   // Add this useEffect to handle client-side mounting
   useEffect(() => {
-    setIsMounted(true)
-  }, [])
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("token")
-          if (token) {
-            try {
-              const decoded = jwtDecode(token)
-              setCurrentUserId(decoded.id)
-            } catch (error) {
-              console.error("Error decoding token:", error)
-            }
-          } 
-      try {
-        const response = await api.get(`/users/${currentUserId}`)
-        setUser(response.data)
-      } catch (error) {
-        console.error("Error fetching user:", error)
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          setCurrentUserId(decoded.id);
+        } catch (error) {
+          console.error("Error decoding token:", error);
+        }
       }
-    }
+      try {
+        const response = await api.get(`/users/${currentUserId}`);
+        setUser(response.data);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
 
-    fetchUser()
-  }, [currentUserId])
+    fetchUser();
+  }, [currentUserId]);
 
   // Animation variants for page transitions
   const pageVariants = {
@@ -55,27 +56,29 @@ const DashboardUser = () => {
       x: 20,
       transition: { duration: 0.2 },
     },
-  }
+  };
 
   // Render the active component based on the selected tab
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard />
+        return <Dashboard />;
       case "activities":
-        return <Activities />
+        return <Activities />;
       case "chat":
-        return <Chat />
+        return <Chat />;
       case "profile":
-        return <Profile />
+        return <Profile />;
+      case "orders":
+        return <Orders user={user} />;
       default:
-        return <Dashboard />
+        return <Dashboard />;
     }
-  }
+  };
 
   // Don't render until client-side
   if (!isMounted) {
-    return null
+    return null;
   }
 
   return (
@@ -95,8 +98,7 @@ const DashboardUser = () => {
         {renderContent()}
       </motion.main>
     </div>
-  )
-}
+  );
+};
 
-export default DashboardUser
-
+export default DashboardUser;

@@ -20,6 +20,8 @@ const Activities = () => {
   const [statusFilter, setStatusFilter] = useState("all")
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
+  // const path = window.location.pathname;
+
   // Get current user ID from token
   useEffect(() => {
     const token = localStorage.getItem("token")
