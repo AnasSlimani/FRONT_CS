@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import api from "@/app/api/axios"
 import { jwtDecode } from "jwt-decode"
@@ -17,6 +17,8 @@ import {
   MoreHorizontal,
   Eye,
   Trash2,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import Image from "next/image"
 
@@ -28,14 +30,16 @@ export default function Commandes() {
   const [activeStatus, setActiveStatus] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState(null)
-  const [idUser,setIdUser] = useState("")
+  const [idUser, setIdUser] = useState("")
 
-  // Fetch orders data
+  const ordersPerPage = 8
+  const [currentPage, setCurrentPage] = useState(1)
+
   useEffect(() => {
     const fetchOrders = async () => {
       setIsLoading(true)
       try {
-        const idUser = jwtDecode(localStorage.getItem("token")).id;
+        const idUser = jwtDecode(localStorage.getItem("token")).id
         setIdUser(idUser)
         const response = await api.get("/orders")
         setOrders(response.data)
@@ -50,40 +54,38 @@ export default function Commandes() {
     fetchOrders()
   }, [])
 
-  // Filter orders based on search term and active status
   useEffect(() => {
     let filtered = orders
 
-    // Filter by status
     if (activeStatus !== "all") {
       filtered = filtered.filter((order) => order.status === activeStatus)
     }
 
-    // Filter by search term
     if (searchTerm.trim() !== "") {
       filtered = filtered.filter(
         (order) =>
           order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.product.name.toLowerCase().includes(searchTerm.toLowerCase()),
+          order.product.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
     setFilteredOrders(filtered)
+    setCurrentPage(1)
   }, [searchTerm, activeStatus, orders])
 
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value)
-  }
+  const indexOfLastOrder = currentPage * ordersPerPage
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage
+  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder)
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage)
 
-  // Toggle dropdown menu for a specific order
+  const handleSearchChange = (e) => setSearchTerm(e.target.value)
+
   const toggleDropdown = (id) => {
     setActiveDropdown(activeDropdown === id ? null : id)
   }
 
-  // Get status badge color
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
@@ -97,7 +99,6 @@ export default function Commandes() {
     }
   }
 
-  // Get status icon
   const getStatusIcon = (status) => {
     switch (status) {
       case "pending":
@@ -111,30 +112,8 @@ export default function Commandes() {
     }
   }
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.3, ease: "easeOut" },
-    },
-  }
-
-  // Mark as delivered handler
   const handleMarkAsDelivered = (orderId) => {
-    // In a real app, you would call your API to update the order status
-    setOrders(orders.map((order) => (order.id === orderId ? { ...order, status: "delivered" } : order)))
+    setOrders(orders.map((order) => (order.id === orderId ? { ...order, status: "completed" } : order)))
     setActiveDropdown(null)
   }
 
@@ -158,7 +137,6 @@ export default function Commandes() {
         <p className="text-gray-600 mt-1">Manage your club product orders</p>
       </motion.div>
 
-      {/* Search and filters */}
       <div className="mb-6 bg-white rounded-xl shadow-md p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="relative flex-1">
@@ -173,104 +151,44 @@ export default function Commandes() {
               onChange={handleSearchChange}
             />
           </div>
-
-          <div className="flex items-center space-x-2">
-            <button
-              className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-5 w-5 mr-2" />
-              Filters
-            </button>
-          </div>
+          <button
+            className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-5 w-5 mr-2" />
+            Filters
+          </button>
         </div>
 
-        {/* Status filters */}
         <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeStatus === "all" ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-            onClick={() => setActiveStatus("all")}
-          >
-            All
-          </button>
-          <button
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
-              activeStatus === "pending" ? "bg-yellow-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-            onClick={() => setActiveStatus("pending")}
-          >
-            <Package className="h-4 w-4 mr-1" />
-            Pending
-          </button>
-          <button
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
-              activeStatus === "delivered" ? "bg-green-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-            onClick={() => setActiveStatus("completed")}
-          >
-            <CheckCircle className="h-4 w-4 mr-1" />
-            Payed
-          </button>
-          <button
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
-              activeStatus === "canceled" ? "bg-red-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-            onClick={() => setActiveStatus("canceled")}
-          >
-            <XCircle className="h-4 w-4 mr-1" />
-            Cancelled
-          </button>
+          {["all", "pending", "completed", "canceled"].map((status) => (
+            <button
+              key={status}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
+                activeStatus === status
+                  ? status === "pending"
+                    ? "bg-yellow-500 text-white"
+                    : status === "completed"
+                    ? "bg-green-500 text-white"
+                    : status === "canceled"
+                    ? "bg-red-500 text-white"
+                    : "bg-teal-500 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+              onClick={() => setActiveStatus(status)}
+            >
+              {getStatusIcon(status)}
+              <span className="ml-1 capitalize">{status}</span>
+            </button>
+          ))}
         </div>
-
-        {/* Advanced filters - collapsible */}
-        {showFilters && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mt-4 pt-4 border-t border-gray-200"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-                <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                  <option value="">All</option>
-                  <option value="card">Credit Card</option>
-                  <option value="cash">Cash</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
-                <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                  <option value="">All</option>
-                  <option value="last-week">Last Week</option>
-                  <option value="last-month">Last Month</option>
-                  <option value="last-3-months">Last 3 Months</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Product</label>
-                <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                  <option value="">All</option>
-                  <option value="polo">Polo</option>
-                  <option value="hoodie">Hoodie</option>
-                  <option value="cap">Cap</option>
-                  <option value="tshirt">T-Shirt</option>
-                </select>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </div>
 
-      {/* Orders list */}
       <motion.div
-        variants={containerVariants}
+        variants={{
+          hidden: { opacity: 0 },
+          visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
+        }}
         initial="hidden"
         animate="visible"
         className="bg-white rounded-xl shadow-md overflow-hidden"
@@ -279,48 +197,25 @@ export default function Commandes() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Order
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Customer
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Product
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Status
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredOrders.map((order) => (
-                <motion.tr key={order.id} variants={itemVariants} className="hover:bg-gray-50 transition-colors">
+              {currentOrders.map((order) => (
+                <motion.tr key={order.id} variants={{
+                  hidden: { y: 20, opacity: 0 },
+                  visible: { y: 0, opacity: 1, transition: { duration: 0.3, ease: "easeOut" } }
+                }} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-teal-100 rounded-full flex items-center justify-center">
+                      <div className="h-10 w-10 bg-teal-100 rounded-full flex items-center justify-center">
                         <ShoppingBag className="h-5 w-5 text-teal-600" />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">1</div>
                         <div className="text-sm text-gray-500 flex items-center">
                           <Calendar className="h-3 w-3 mr-1" />
                           {new Date(order.date).toLocaleDateString()}
@@ -337,7 +232,7 @@ export default function Commandes() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 relative rounded overflow-hidden">
+                      <div className="h-10 w-10 relative rounded overflow-hidden">
                         <Image
                           src={`/images/productImages/${order.product.productImage}`}
                           alt={order.product.productName}
@@ -354,23 +249,15 @@ export default function Commandes() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full items-center ${getStatusColor(order.status)}`}
-                    >
+                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full items-center ${getStatusColor(order.status)}`}>
                       {getStatusIcon(order.status)}
-                      <span className="ml-1">
-                        {order.status === "pending" && "Pending"}
-                        {order.status === "completed" && "completed"}
-                        {order.status === "canceled" && "Canceled"}
-                      </span>
+                      <span className="ml-1 capitalize">{order.status}</span>
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium relative">
                     <button className="text-gray-500 hover:text-gray-700" onClick={() => toggleDropdown(order.id)}>
                       <MoreHorizontal className="h-5 w-5" />
                     </button>
-
-                    {/* Dropdown menu */}
                     {activeDropdown === order.id && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
                         <div className="py-1">
@@ -401,16 +288,41 @@ export default function Commandes() {
           </table>
         </div>
 
-        {/* Empty state */}
-        {filteredOrders.length === 0 && (
-          <div className="py-12 text-center">
-            <ShoppingBag className="h-12 w-12 mx-auto text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No orders found</h3>
-            <p className="mt-1 text-sm text-gray-500">Try modifying your search criteria.</p>
+        {/* Pagination controls */}
+        {filteredOrders.length > 0 && (
+          <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
+            <div className="text-sm text-gray-500">
+              Showing <span className="font-medium">{indexOfFirstOrder + 1}</span> to{" "}
+              <span className="font-medium">{Math.min(indexOfLastOrder, filteredOrders.length)}</span> of{" "}
+              <span className="font-medium">{filteredOrders.length}</span> orders
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-1 rounded-md ${
+                  currentPage === 1
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-1 rounded-md ${
+                  currentPage === totalPages
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         )}
       </motion.div>
     </div>
   )
 }
-
