@@ -25,20 +25,20 @@ const Office = () => {
   const teamMembers = [
     {
       id: 1,
-      name: "Sophie Martin",
-      image: "/images/anas.jpg",
-      role: "Présidente",
+      name: "Anas Slimani",
+      image: "/images/Office/anas.jpg",
+      role: "Président",
     },
     {
       id: 2,
-      name: "Thomas Dubois",
-      image: "/images/badr.jpg",
-      role: "Vice-Président",
+      name: "Badr Ezziyati",
+      image: "/images/Office/badr.jpg",
+      role: "Président",
     },
     {
       id: 3,
-      name: "Emma Lefebvre",
-      image: "/images/ilyass.jpg",
+      name: "Ilyass Hassaini",
+      image: "/images/Office/ilyass.jpg",
       role: "Trésorière",
     },
     {
