@@ -3,25 +3,10 @@
 import { useState, useEffect } from "react"
 import api from "@/app/api/axios"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-  Search,
-  Filter,
-  Plus,
-  Calendar,
-  MapPin,
-  Trophy,
-  Users,
-  Clock,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye,
-  AlertCircle,
-} from "lucide-react"
+import { Search, Filter, Plus, Tag, Package, DollarSign, Users, Layers, MoreHorizontal, Edit, Trash2, Eye, AlertCircle } from 'lucide-react'
 import Image from "next/image"
-import CreateActivityModal from "@/components/dashboardadmin/modals/CreateActivityModal"
-import EditActivityModal from "@/components/dashboardadmin/modals/EditActivityModal"
-import ActivityDetails from "./ActivityDetails"
+import CreateProductModal from "@/components/dashboardadmin/modals/CreateProductModal"
+import EditProductModal from "@/components/dashboardadmin/modals/EditProductModal"
 
 export default function Products() {
   const [products, setProducts] = useState([])
@@ -37,7 +22,7 @@ export default function Products() {
   const [deleteConfirmation, setDeleteConfirmation] = useState(null)
   const [selectedProductId, setSelectedProductId] = useState(null)
 
-  // Fetch activities data
+  // Fetch product data
   useEffect(() => {
     fetchProducts()
   }, [])
@@ -49,17 +34,17 @@ export default function Products() {
       setProducts(response.data)
       setFilteredProducts(response.data)
     } catch (error) {
-      console.error("Error fetching activities:", error)
+      console.error("Error fetching products:", error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Filter activities based on search term and active type
+  // Filter products based on search term and active category
   useEffect(() => {
     let filtered = products
 
-    // Filter by type
+    // Filter by category
     if (activeCategory !== "all") {
       filtered = filtered.filter((product) => product.productCategory === activeCategory)
     }
@@ -74,7 +59,7 @@ export default function Products() {
       )
     }
 
-    setFilteredActivities(filtered)
+    setFilteredProducts(filtered)
   }, [searchTerm, activeCategory, products])
 
   // Handle search input change
@@ -82,41 +67,41 @@ export default function Products() {
     setSearchTerm(e.target.value)
   }
 
-  // Toggle dropdown menu for a specific activity
+  // Toggle dropdown menu for a specific product
   const toggleDropdown = (id) => {
     setActiveDropdown(activeDropdown === id ? null : id)
   }
 
-  // Handle activity creation
+  // Handle product creation
   const handleProductCreated = (newProduct) => {
     setProducts([...products, newProduct])
-    // Refresh activities from server to ensure we have the latest data
+    // Refresh products from server to ensure we have the latest data
     fetchProducts()
   }
 
-  // Handle activity update
+  // Handle product update
   const handleProductUpdated = (updatedProduct) => {
     setProducts(products.map((product) => (product.id === updatedProduct.id ? updatedProduct : product)))
-    // Refresh activities from server to ensure we have the latest data
+    // Refresh products from server to ensure we have the latest data
     fetchProducts()
   }
 
   // Handle view details button click
-  const handleViewDetails = (activity) => {
-    setSelectedActivityId(activity.id)
+  const handleViewDetails = (product) => {
+    setSelectedProductId(product.id)
     setActiveDropdown(null) // Close dropdown
   }
 
   // Handle edit button click
-  const handleEditClick = (activity) => {
-    setCurrentActivity(activity)
+  const handleEditClick = (product) => {
+    setCurrentProduct(product)
     setShowEditModal(true)
     setActiveDropdown(null) // Close dropdown
   }
 
   // Handle delete button click
-  const handleDeleteClick = (activity) => {
-    setDeleteConfirmation(activity)
+  const handleDeleteClick = (product) => {
+    setDeleteConfirmation(product)
     setActiveDropdown(null) // Close dropdown
   }
 
@@ -125,25 +110,25 @@ export default function Products() {
     if (!deleteConfirmation) return
 
     try {
-      await api.delete(`/activities/${deleteConfirmation.id}`)
-      setActivities(activities.filter((activity) => activity.id !== deleteConfirmation.id))
+      await api.delete(`/products/${deleteConfirmation.id}`)
+      setProducts(products.filter((product) => product.id !== deleteConfirmation.id))
       setDeleteConfirmation(null)
     } catch (error) {
-      console.error("Error deleting activity:", error)
+      console.error("Error deleting product:", error)
     }
   }
 
-  // Get icon based on activity type
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case "tournament":
-        return <Trophy className="w-5 h-5 text-yellow-500" />
-      case "deplacement":
-        return <MapPin className="w-5 h-5 text-red-500" />
-      case "matchAmical":
-        return <Users className="w-5 h-5 text-blue-500" />
+  // Get icon based on product category
+  const getCategoryIcon = (category) => {
+    switch (category?.toLowerCase()) {
+      case "clothing":
+        return <Tag className="w-5 h-5 text-blue-500" />
+      case "equipment":
+        return <Package className="w-5 h-5 text-green-500" />
+      case "accessories":
+        return <Layers className="w-5 h-5 text-purple-500" />
       default:
-        return <Calendar className="w-5 h-5 text-teal-500" />
+        return <Package className="w-5 h-5 text-teal-500" />
     }
   }
 
@@ -167,58 +152,49 @@ export default function Products() {
     },
   }
 
-  // Activity card component
-  const ActivityCard = ({ activity }) => (
+  // Product card component
+  const ProductCard = ({ product }) => (
     <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-md overflow-hidden">
-      {/* Activity Image */}
+      {/* Product Image */}
       <div className="relative h-48 w-full">
         <Image
-          src={activity.image ? `/images/${activity.image}` : "/placeholder.svg?height=400&width=600"}
-          alt={activity.name}
+          src={product.productImage ? `/images/productImages/${product.productImage}` : "/placeholder.svg?height=400&width=600"}
+          alt={product.productName}
           fill
           className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
-        {/* Type Badge */}
+        {/* Category Badge */}
         <div className="absolute top-4 left-4 bg-white/90 text-gray-800 px-3 py-1 rounded-full text-sm font-medium shadow-lg backdrop-blur-sm flex items-center">
-          {getActivityIcon(activity.type)}
-          <span className="ml-1.5 capitalize">{activity.type}</span>
+          {getCategoryIcon(product.productCategory)}
+          <span className="ml-1.5 capitalize">{product.productCategory}</span>
         </div>
 
         {/* Actions Dropdown */}
         <div className="absolute top-4 right-4">
           <button
             className="p-2 bg-white/90 rounded-full shadow-lg backdrop-blur-sm"
-            onClick={() => toggleDropdown(activity.id)}
+            onClick={() => toggleDropdown(product.id)}
           >
             <MoreHorizontal className="h-5 w-5 text-gray-700" />
           </button>
 
           {/* Dropdown menu */}
-          {activeDropdown === activity.id && (
+          {activeDropdown === product.id && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
               <div className="py-1">
-                {/* Only show View Details for tournament and matchAmical types */}
-                {activity.type !== "deplacement" && (
-                  <button
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                    onClick={() => handleViewDetails(activity)}
-                  >
-                    <Eye className="h-4 w-4 mr-2 text-gray-500" />
-                    View Details
-                  </button>
-                )}
+                
                 <button
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                  onClick={() => handleEditClick(activity)}
+                  onClick={() => handleEditClick(product)}
                 >
                   <Edit className="h-4 w-4 mr-2 text-gray-500" />
                   Edit
                 </button>
                 <button
                   className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
-                  onClick={() => handleDeleteClick(activity)}
+                  onClick={() => handleDeleteClick(product)}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
@@ -229,28 +205,29 @@ export default function Products() {
         </div>
       </div>
 
-      {/* Activity Content */}
+      {/* Product Content */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">{activity.name}</h3>
-        <p className="text-sm text-gray-600 mb-4 line-clamp-2">{activity.description}</p>
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">{product.productName}</h3>
+        <p className="text-sm text-gray-600 mb-4 line-clamp-2">{product.description}</p>
 
         <div className="space-y-2">
           <div className="flex items-center text-sm text-gray-600">
-            <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-            <span>{new Date(activity.date).toLocaleDateString()}</span>
+            <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
+            <span>${product.productPrice?.toFixed(2)}</span>
           </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <Clock className="h-4 w-4 mr-2 text-gray-500" />
-            <span>{activity.time}</span>
-          </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <MapPin className="h-4 w-4 mr-2 text-gray-500" />
-            <span>{activity.localisation}</span>
-          </div>
-          {activity.nbrParticipants && (
+          {product.color && (
             <div className="flex items-center text-sm text-gray-600">
-              <Users className="h-4 w-4 mr-2 text-gray-500" />
-              <span>{activity.nbrParticipants} participants</span>
+              <div 
+                className="h-4 w-4 mr-2 rounded-full" 
+                style={{ backgroundColor: product.color }}
+              ></div>
+              <span>{product.color}</span>
+            </div>
+          )}
+          {product.size && (
+            <div className="flex items-center text-sm text-gray-600">
+              <Tag className="h-4 w-4 mr-2 text-gray-500" />
+              <span>Size: {product.size}</span>
             </div>
           )}
         </div>
@@ -259,12 +236,14 @@ export default function Products() {
           <div className="flex justify-between items-center">
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                activity.isTournamentFull ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
+                product.inStock ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
               }`}
             >
-              {activity.isTournamentFull ? "Full" : "Available Spots"}
+              {product.productQuantity > 0 ? "In Stock" : "Out of Stock"}
             </span>
-            <span className="text-sm font-medium text-gray-700">{activity.sport}</span>
+            <span className="text-sm font-medium text-gray-700">
+              {product.productQuantity} {product.productQuantity === 1 ? "item" : "items"}
+            </span>
           </div>
         </div>
       </div>
@@ -291,11 +270,11 @@ export default function Products() {
           >
             <div className="p-6 border-b border-gray-200 flex items-center text-red-600">
               <AlertCircle className="h-6 w-6 mr-2" />
-              <h2 className="text-xl font-bold">Delete Activity</h2>
+              <h2 className="text-xl font-bold">Delete Product</h2>
             </div>
             <div className="p-6">
               <p className="text-gray-700 mb-4">
-                Are you sure you want to delete <span className="font-semibold">{deleteConfirmation.name}</span>? This
+                Are you sure you want to delete <span className="font-semibold">{deleteConfirmation.productName}</span>? This
                 action cannot be undone.
               </p>
               <div className="flex justify-end space-x-3">
@@ -327,9 +306,9 @@ export default function Products() {
     )
   }
 
-  if (selectedActivityId) {
-    return <ActivityDetails activityId={selectedActivityId} onBack={() => setSelectedActivityId(null)} />
-  }
+  // if (selectedProductId) {
+  //   return <ProductDetails productId={selectedProductId} onBack={() => setSelectedProductId(null)} />
+  // }
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -340,8 +319,8 @@ export default function Products() {
         className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Activities</h1>
-          <p className="text-gray-600 mt-1">Manage your sports club activities</p>
+          <h1 className="text-3xl font-bold text-gray-800">Products</h1>
+          <p className="text-gray-600 mt-1">Manage your sports club merchandise</p>
         </div>
 
         <button
@@ -349,7 +328,7 @@ export default function Products() {
           onClick={() => setShowAddModal(true)}
         >
           <Plus className="h-5 w-5 mr-2" />
-          Add Activity
+          Add Product
         </button>
       </motion.div>
 
@@ -362,7 +341,7 @@ export default function Products() {
             </div>
             <input
               type="text"
-              placeholder="Search for an activity..."
+              placeholder="Search for a product..."
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
               value={searchTerm}
               onChange={handleSearchChange}
@@ -380,42 +359,42 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Type filters */}
+        {/* Category filters */}
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeType === "all" ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              activeCategory === "all" ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-            onClick={() => setActiveType("all")}
+            onClick={() => setActiveCategory("all")}
           >
             All
           </button>
           <button
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
-              activeType === "tournament" ? "bg-yellow-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              activeCategory === "echarpes" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-            onClick={() => setActiveType("tournament")}
+            onClick={() => setActiveCategory("echarpes")}
           >
-            <Trophy className="h-4 w-4 mr-1" />
-            Tournaments
+            <Tag className="h-4 w-4 mr-1" />
+            Echarpes
           </button>
           <button
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
-              activeType === "deplacement" ? "bg-red-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              activeCategory === "polos" ? "bg-green-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-            onClick={() => setActiveType("deplacement")}
+            onClick={() => setActiveCategory("polos")}
           >
-            <MapPin className="h-4 w-4 mr-1" />
-            Trips
+            <Package className="h-4 w-4 mr-1" />
+            Polos
           </button>
           <button
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
-              activeType === "matchAmical" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              activeCategory === "caps" ? "bg-purple-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-            onClick={() => setActiveType("matchAmical")}
+            onClick={() => setActiveCategory("caps")}
           >
-            <Users className="h-4 w-4 mr-1" />
-            Friendly Matches
+            <Layers className="h-4 w-4 mr-1" />
+            Caps
           </button>
         </div>
 
@@ -430,30 +409,32 @@ export default function Products() {
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sport</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
                 <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500">
                   <option value="">All</option>
-                  <option value="football">Football</option>
-                  <option value="basketball">Basketball</option>
-                  <option value="billard">Billiards</option>
+                  <option value="0-25">$0 - $25</option>
+                  <option value="25-50">$25 - $50</option>
+                  <option value="50-100">$50 - $100</option>
+                  <option value="100+">$100+</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Availability</label>
                 <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500">
                   <option value="">All</option>
-                  <option value="available">Available Spots</option>
-                  <option value="full">Full</option>
+                  <option value="inStock">In Stock</option>
+                  <option value="outOfStock">Out of Stock</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
                 <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                  <option value="">All</option>
-                  <option value="upcoming">Upcoming</option>
-                  <option value="past">Past</option>
+                  <option value="newest">Newest</option>
+                  <option value="priceAsc">Price: Low to High</option>
+                  <option value="priceDesc">Price: High to Low</option>
+                  <option value="nameAsc">Name: A to Z</option>
                 </select>
               </div>
             </div>
@@ -461,23 +442,23 @@ export default function Products() {
         )}
       </div>
 
-      {/* Activities grid */}
+      {/* Products grid */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
-        {filteredActivities.map((activity) => (
-          <ActivityCard key={activity.id} activity={activity} />
+        {filteredProducts.map((product) => (
+          <ProductCard key={product.id} product={product} />
         ))}
 
         {/* Empty state */}
-        {filteredActivities.length === 0 && (
+        {filteredProducts.length === 0 && (
           <div className="col-span-full py-12 text-center bg-white rounded-xl shadow-md">
-            <Calendar className="h-12 w-12 mx-auto text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No activities found</h3>
-            <p className="mt-1 text-sm text-gray-500">Try modifying your search criteria or add a new activity.</p>
+            <Package className="h-12 w-12 mx-auto text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
+            <p className="mt-1 text-sm text-gray-500">Try modifying your search criteria or add a new product.</p>
             <div className="mt-6">
               <button
                 type="button"
@@ -485,26 +466,26 @@ export default function Products() {
                 onClick={() => setShowAddModal(true)}
               >
                 <Plus className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
-                Add Activity
+                Add Product
               </button>
             </div>
           </div>
         )}
       </motion.div>
 
-      {/* Create Activity Modal */}
-      <CreateActivityModal
+      {/* Create Product Modal */}
+      <CreateProductModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        onActivityCreated={handleActivityCreated}
+        onProductCreated={handleProductCreated}
       />
 
-      {/* Edit Activity Modal */}
-      <EditActivityModal
+      {/* Edit Product Modal */}
+      <EditProductModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        activity={currentActivity}
-        onActivityUpdated={handleActivityUpdated}
+        product={currentProduct}
+        onProductUpdated={handleProductUpdated}
       />
 
       {/* Delete Confirmation Modal */}

@@ -56,6 +56,9 @@ export const CartProvider = ({ children }) => {
     fecthCartOrder();
   }, []); // Empty dependency array = run once on mount
 
+
+  
+
   // Add item to cart
   const addToCart = async (product) => {
     // Check if product already exists in cart
@@ -140,7 +143,7 @@ export const CartProvider = ({ children }) => {
 
   return (
     <CartContext.Provider
-      value={{ cartItems, addToCart, removeFromCart, toggleItemSelection }}
+      value={{ cartItems, addToCart, removeFromCart, toggleItemSelection  }}
     >
       {children}
     </CartContext.Provider>
@@ -248,6 +251,7 @@ const ShoppingCart = () => {
       if (response.status == 200) {
         console.log(response.data);
         alert("orders confirm");
+        window.location.reload();
       }
     } catch (error) {
       console.log(error.message);
