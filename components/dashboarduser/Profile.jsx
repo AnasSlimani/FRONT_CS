@@ -345,7 +345,7 @@ const Profile = () => {
                   <span className="text-gray-600 dark:text-gray-300">Status</span>
                   <span className="text-green-500 font-medium flex items-center">
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    Active
+                    { user.contributed ? "Contributed" : "Not Contributed" }
                   </span>
                 </div>
                 <div className="flex justify-between items-center">

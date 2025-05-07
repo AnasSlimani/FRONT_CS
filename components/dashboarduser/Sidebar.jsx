@@ -103,7 +103,7 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
                   />
                   <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white z-20"></div>
                 </div>
-                <h2 className="text-xl font-bold">John Doe</h2>
+                <h2 className="text-xl font-bold">{user.username}</h2>
                 <p className="text-gray-400 text-sm">Premium Member</p>
               </div>
             </div>

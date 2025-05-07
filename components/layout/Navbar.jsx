@@ -216,14 +216,7 @@ export default function Navbar() {
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-500 transition-all duration-300 group-hover:w-full"></span>
                 </Link>
 
-                <Link
-                  href="#contact"
-                  className="text-black font-semibold text-sm lg:text-base hover:text-teal-500 transition-colors duration-200 flex items-center group relative px-2 py-2"
-                >
-                  <Phone size={16} className="mr-1.5 group-hover:text-teal-500 transition-colors duration-200" />
-                  <span>CONTACT</span>
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-500 transition-all duration-300 group-hover:w-full"></span>
-                </Link>
+                
               </div>
             </div>
 
@@ -370,14 +363,7 @@ export default function Navbar() {
               <span>SHOP</span>
             </Link>
 
-            <Link
-              href="/contact"
-              className="w-full max-w-xs text-center text-white font-bold text-xl py-2 flex items-center justify-center"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Phone size={20} className="mr-2" />
-              <span>CONTACT</span>
-            </Link>
+            
 
             {/* Mobile auth buttons - conditionally rendered based on token */}
             {token ? (

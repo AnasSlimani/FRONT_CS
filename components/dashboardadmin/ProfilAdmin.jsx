@@ -273,7 +273,7 @@ export default function ProfilAdmin() {
         transition={{ duration: 0.5 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-gray-800">Administrator Profile</h1>
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">Administrator Profile</h1>
         <p className="text-gray-600 mt-1">Manage your personal information and preferences</p>
       </motion.div>
 

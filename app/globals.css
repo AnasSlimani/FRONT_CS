@@ -60,3 +60,7 @@ html {
 .footer{
   height: 100px;
 }
+
+.font-display {
+  font-family: "Poppins", sans-serif;
+}

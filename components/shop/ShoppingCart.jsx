@@ -254,6 +254,7 @@ const ShoppingCart = () => {
       if (response.status == 200) {
         console.log(response.data);
         alert("orders confirm");
+        window.location.reload();
       }
     } catch (error) {
       console.log(error.message);
