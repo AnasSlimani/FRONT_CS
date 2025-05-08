@@ -25,7 +25,7 @@ import {
   X,
 } from "lucide-react"
 
-const Profile = () => {
+const Profile = ({ refreshUserData }) => {
   // State for user data
   const [user, setUser] = useState({})
   const [currentUserId, setCurrentUserId] = useState(null)
@@ -150,6 +150,11 @@ const Profile = () => {
         profilePicture: imageUrl,
       }))
 
+      // Call the refreshUserData function to update the user data in the parent component
+      if (refreshUserData) {
+        refreshUserData()
+      }
+
       // Show success message
       setSaveSuccess(true)
       setTimeout(() => {
@@ -194,6 +199,12 @@ const Profile = () => {
 
       // Update local user state with response data
       setUser(response.data)
+
+      // Call the refreshUserData function to update the user data in the parent component
+      if (refreshUserData) {
+        refreshUserData()
+      }
+
       setSaveSuccess(true)
       setIsEditing(false)
 
@@ -333,6 +344,7 @@ const Profile = () => {
               </div>
             </div>
 
+            {/* Rest of the component remains the same */}
             {/* Membership info */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
@@ -345,7 +357,7 @@ const Profile = () => {
                   <span className="text-gray-600 dark:text-gray-300">Status</span>
                   <span className="text-green-500 font-medium flex items-center">
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    { user.contributed ? "Contributed" : "Not Contributed" }
+                    {user.contributed ? "Contributed" : "Not Contributed"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -412,7 +424,7 @@ const Profile = () => {
           </div>
         </motion.div>
 
-        {/* Profile form */}
+        {/* Profile form - rest of the component remains the same */}
         <motion.div variants={itemVariants} className="lg:col-span-2">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
@@ -478,6 +490,7 @@ const Profile = () => {
             )}
 
             <form onSubmit={handleSubmit} className="p-6">
+              {/* Form fields remain the same */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {/* Username */}
                 <div>
@@ -664,4 +677,3 @@ const Profile = () => {
 }
 
 export default Profile
-

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
-import { LayoutDashboard,ShoppingCart, Calendar, MessageSquare, User, ChevronDown, LogOut, Settings, Menu, X } from "lucide-react"
+import { LayoutDashboard, ShoppingCart, Calendar, MessageSquare, User, ChevronDown, Menu, X } from "lucide-react"
 
 // Sample team data for the chat dropdown
 const teams = [
@@ -12,9 +12,10 @@ const teams = [
   { id: 3, name: "Billard Masters", image: "/images/logo.png" },
 ]
 
-const Sidebar = ({ activeTab, setActiveTab ,user}) => {
+const Sidebar = ({ activeTab, setActiveTab, user }) => {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [defaultProfilePicture, setDefaultProfilePicture] = useState("/images/default-avatar.png")
 
   // Animation variants
   const sidebarVariants = {
@@ -95,7 +96,7 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
                 <div className="relative w-24 h-24 mb-4">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 animate-pulse"></div>
                   <Image
-                    src={user.profilePicture}
+                    src={user?.profilePicture || defaultProfilePicture}
                     alt="User Profile"
                     width={96}
                     height={96}
@@ -103,7 +104,7 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
                   />
                   <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white z-20"></div>
                 </div>
-                <h2 className="text-xl font-bold">{user.username}</h2>
+                <h2 className="text-xl font-bold">{user?.username || "User"}</h2>
                 <p className="text-gray-400 text-sm">Premium Member</p>
               </div>
             </div>
@@ -191,7 +192,7 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
                     )}
                   </AnimatePresence>
                 </motion.li>
-                
+
                 {/* Orders */}
                 <motion.li custom={3} variants={itemVariants} initial="hidden" animate="visible">
                   <button
@@ -206,7 +207,7 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
                 </motion.li>
 
                 {/* Profile */}
-                <motion.li custom={3} variants={itemVariants} initial="hidden" animate="visible">
+                <motion.li custom={4} variants={itemVariants} initial="hidden" animate="visible">
                   <button
                     className={`flex items-center w-full p-3 rounded-lg transition-colors duration-200 ${
                       activeTab === "profile" ? "bg-teal-600 text-white" : "text-gray-300 hover:bg-gray-700"
@@ -227,4 +228,3 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
 }
 
 export default Sidebar
-
