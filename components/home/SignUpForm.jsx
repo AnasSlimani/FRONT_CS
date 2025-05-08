@@ -18,6 +18,7 @@ export function Test() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   // Reference to Google button container
   const googleButtonRef = useRef(null)
@@ -36,6 +37,7 @@ export function Test() {
     e.preventDefault()
     setError("")
     setIsLoading(true)
+    setEmailSent(false)
 
     // Basic validation
     if (!formData.username || !formData.email || !formData.password) {
@@ -66,6 +68,28 @@ export function Test() {
       const response = await api.post("/users", user, { public: true })
       console.log("User created:", response.data)
       setSuccess(true)
+
+      // Send welcome email
+      try {
+        const emailResponse = await fetch("/api/welcome-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: formData.username,
+            email: formData.email,
+          }),
+        })
+
+        const emailResult = await emailResponse.json()
+        if (emailResult.success) {
+          setEmailSent(true)
+        }
+      } catch (emailError) {
+        console.error("Error sending welcome email:", emailError)
+        // Don't block the registration process if email fails
+      }
 
       // Redirect or show success message
       setTimeout(() => {
@@ -153,6 +177,22 @@ export function Test() {
       // Use the Google Login endpoint directly
       const loginResponse = await api.post("users/google-login", googleAuthData, { public: true })
 
+      // Send welcome email for Google sign-in too
+      try {
+        await fetch("/api/welcome-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: googleAuthData.name,
+            email: googleAuthData.email,
+          }),
+        })
+      } catch (emailError) {
+        console.error("Error sending welcome email for Google sign-in:", emailError)
+      }
+
       // Store the token and redirect
       localStorage.setItem("token", loginResponse.data)
       setSuccess(true)
@@ -184,7 +224,7 @@ export function Test() {
       {/* Success message */}
       {success && (
         <div className="mt-4 p-3 bg-green-100 border border-green-200 text-green-700 rounded-lg">
-          Account created successfully! Redirecting...
+          Account created successfully! {emailSent && "Welcome email sent to your inbox."} Redirecting...
         </div>
       )}
 
@@ -262,4 +302,3 @@ const BottomGradient = () => {
 const LabelInputContainer = ({ children, className }) => {
   return <div className={cn("flex w-full flex-col space-y-2", className)}>{children}</div>
 }
-
