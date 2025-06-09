@@ -373,7 +373,7 @@ export default function Products() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
               activeCategory === "echarpes" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-            onClick={() => setActiveCategory("echarpes")}
+            onClick={() => setActiveCategory("echarpe")}
           >
             <Tag className="h-4 w-4 mr-1" />
             Echarpes
