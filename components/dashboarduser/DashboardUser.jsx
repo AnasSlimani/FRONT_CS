@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { motion } from "framer-motion"
 import Sidebar from "./Sidebar"
 import Dashboard from "./Dashboard"
 import Activities from "./Activities"
+import Orders from "./Orders"
 import Chat from "./Chat"
 import Profile from "./Profile"
 import { jwtDecode } from "jwt-decode"
@@ -15,32 +16,44 @@ const DashboardUser = () => {
   const [isMounted, setIsMounted] = useState(false)
   const [user, setUser] = useState({})
   const [currentUserId, setCurrentUserId] = useState(null)
+
   // Add this useEffect to handle client-side mounting
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
+  // Create a function to refresh user data that can be passed to child components
+  const refreshUserData = useCallback(async () => {
+    if (!currentUserId) return
+
+    try {
+      const response = await api.get(`/users/${currentUserId}`)
+      setUser(response.data)
+    } catch (error) {
+      console.error("Error fetching user:", error)
+    }
+  }, [currentUserId])
+
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token")
-          if (token) {
-            try {
-              const decoded = jwtDecode(token)
-              setCurrentUserId(decoded.id)
-            } catch (error) {
-              console.error("Error decoding token:", error)
-            }
-          } 
-      try {
-        const response = await api.get(`/users/${currentUserId}`)
-        setUser(response.data)
-      } catch (error) {
-        console.error("Error fetching user:", error)
+      if (token) {
+        try {
+          const decoded = jwtDecode(token)
+          setCurrentUserId(decoded.id)
+        } catch (error) {
+          console.error("Error decoding token:", error)
+        }
       }
     }
 
     fetchUser()
-  }, [currentUserId])
+  }, [])
+
+  // Fetch user data when currentUserId changes
+  useEffect(() => {
+    refreshUserData()
+  }, [currentUserId, refreshUserData])
 
   // Animation variants for page transitions
   const pageVariants = {
@@ -61,13 +74,15 @@ const DashboardUser = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard />
+        return <Dashboard user={user} />
       case "activities":
         return <Activities />
       case "chat":
         return <Chat />
       case "profile":
-        return <Profile />
+        return <Profile refreshUserData={refreshUserData} />
+      case "orders":
+        return <Orders user={user} />
       default:
         return <Dashboard />
     }
@@ -99,4 +114,3 @@ const DashboardUser = () => {
 }
 
 export default DashboardUser
-

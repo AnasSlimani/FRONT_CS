@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react"
 import api from "@/app/api/axios"
 import { motion, AnimatePresence } from "framer-motion"
+<<<<<<< HEAD
 import { Search, Filter, Plus, Tag, Package, DollarSign, Users, Layers, MoreHorizontal, Edit, Trash2, Eye, AlertCircle } from 'lucide-react'
+=======
+import { Search, Filter, Plus, Tag, Package, DollarSign, Users, Layers, MoreHorizontal, Edit, Trash2, Eye,Shirt , AlertCircle } from 'lucide-react'
+>>>>>>> b48840acaf7fa2f93c74453d2eb365d5f5bae86e
 import Image from "next/image"
 import CreateProductModal from "@/components/dashboardadmin/modals/CreateProductModal"
 import EditProductModal from "@/components/dashboardadmin/modals/EditProductModal"
@@ -124,11 +128,19 @@ export default function Products() {
       case "clothing":
         return <Tag className="w-5 h-5 text-blue-500" />
       case "equipment":
+<<<<<<< HEAD
         return <Package className="w-5 h-5 text-green-500" />
       case "accessories":
         return <Layers className="w-5 h-5 text-purple-500" />
       default:
         return <Package className="w-5 h-5 text-teal-500" />
+=======
+        return <Shirt className="w-5 h-5 text-green-500" />
+      case "accessories":
+        return <Layers className="w-5 h-5 text-purple-500" />
+      default:
+        return <Shirt className="w-5 h-5 text-teal-500" />
+>>>>>>> b48840acaf7fa2f93c74453d2eb365d5f5bae86e
     }
   }
 
@@ -373,13 +385,18 @@ export default function Products() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
               activeCategory === "echarpes" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
+<<<<<<< HEAD
             onClick={() => setActiveCategory("echarpes")}
+=======
+            onClick={() => setActiveCategory("echarpe")}
+>>>>>>> b48840acaf7fa2f93c74453d2eb365d5f5bae86e
           >
             <Tag className="h-4 w-4 mr-1" />
             Echarpes
           </button>
           <button
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
+<<<<<<< HEAD
               activeCategory === "polos" ? "bg-green-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
             onClick={() => setActiveCategory("polos")}
@@ -393,6 +410,30 @@ export default function Products() {
             }`}
             onClick={() => setActiveCategory("caps")}
           >
+=======
+              activeCategory === "hoodies" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+            onClick={() => setActiveCategory("hoodies")}
+          >
+            <Tag className="h-4 w-4 mr-1" />
+            Hoodies
+          </button>
+          <button
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
+              activeCategory === "polos" ? "bg-green-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+            onClick={() => setActiveCategory("polos")}
+          >
+            <Shirt className="h-4 w-4 mr-1" />
+            Polos
+          </button>
+          <button
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
+              activeCategory === "caps" ? "bg-purple-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+            onClick={() => setActiveCategory("caps")}
+          >
+>>>>>>> b48840acaf7fa2f93c74453d2eb365d5f5bae86e
             <Layers className="h-4 w-4 mr-1" />
             Caps
           </button>
@@ -456,7 +497,11 @@ export default function Products() {
         {/* Empty state */}
         {filteredProducts.length === 0 && (
           <div className="col-span-full py-12 text-center bg-white rounded-xl shadow-md">
+<<<<<<< HEAD
             <Package className="h-12 w-12 mx-auto text-gray-400" />
+=======
+            <Shirt className="h-12 w-12 mx-auto text-gray-400" />
+>>>>>>> b48840acaf7fa2f93c74453d2eb365d5f5bae86e
             <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
             <p className="mt-1 text-sm text-gray-500">Try modifying your search criteria or add a new product.</p>
             <div className="mt-6">

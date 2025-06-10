@@ -10,7 +10,7 @@ import api from "@/app/api/axios"
 import { createPortal } from "react-dom"
 import { jwtDecode } from "jwt-decode"
 
-const LoginModal = ({ isOpen, onClose }) => {
+const LoginModal = ({ isOpen, onClose , path }) => {
   const [loginForm, setLoginForm] = useState({
     email: "",
     password: "",
@@ -105,28 +105,29 @@ const LoginModal = ({ isOpen, onClose }) => {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
+  e.preventDefault()
+  setError("")
+  setIsLoading(true)
 
-    try {
-      const response = await api.post("/users/login", loginForm, { public: true })
-      const token = response.data
-      console.log(token)
-      // Store token
-      localStorage.setItem("token", token)
-      document.cookie = `token=${token}; path=/`
-
-      // Redirect based on role
-      onClose()
-      window.location.href = jwtDecode(token).role === "ADMIN" ? "/dashboardadmin" : "/"
-    } catch (error) {
-      setError("Invalid email or password. Please try again.")
-      console.error("Login error:", error)
-    } finally {
-      setIsLoading(false)
-    }
+  try {
+    const response = await api.post("/users/login", loginForm, { public: true })
+    const token = response.data
+    console.log(token);
+    // Store token
+    localStorage.setItem("token", token)
+    document.cookie = `token=${token}; path=/`
+    
+    // Redirect based on role
+    onClose()
+    window.location.href = jwtDecode(token).role === "ADMIN" ? "/dashboardadmin" : path
+    
+  } catch (error) {
+    setError("Invalid email or password. Please try again.")
+    console.error("Login error:", error)
+  } finally {
+    setIsLoading(false)
   }
+}
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -141,31 +142,36 @@ const LoginModal = ({ isOpen, onClose }) => {
     try {
       setIsLoading(true)
       setError("")
-
+  
       const decodedToken = parseJwt(response.credential)
       const googleAuthData = {
         email: decodedToken.email,
         googleId: decodedToken.sub,
-        name: `${decodedToken.given_name} ${decodedToken.family_name}`,
+        name: `${decodedToken.given_name} ${decodedToken.family_name}`
       }
-
-      const loginResponse = await api.post("users/google-login", googleAuthData, { public: true })
-
+  
+      const loginResponse = await api.post(
+        "users/google-login",
+        googleAuthData,
+        { public: true }
+      )
+  
       const { token, role } = loginResponse.data
-
+      
       // Store token
       localStorage.setItem("token", token)
-
+      
       // Redirect based on role
       onClose()
       window.location.href = role === "ADMIN" ? "/dashboardadmin" : "/"
+      
     } catch (error) {
       console.error("Error with Google Sign-In:", error)
       setError(error.response?.data || "Failed to sign in with Google. Please try again.")
     } finally {
       setIsLoading(false)
     }
-  }
+  };
 
   // Helper function to decode JWT token
   const parseJwt = (token) => {
@@ -240,25 +246,6 @@ const LoginModal = ({ isOpen, onClose }) => {
                     value={loginForm.password}
                     onChange={handleChange}
                   />
-                  <div className="flex justify-end mt-1">
-                    <button
-                      type="button"
-                      className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        if (!loginForm.email || !loginForm.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-                          setError("Please enter a valid email address to reset your password.")
-                          return
-                        }
-                        onClose()
-                        window.dispatchEvent(
-                          new CustomEvent("openResetPasswordModal", { detail: { email: loginForm.email } }),
-                        )
-                      }}
-                    >
-                      Forgot your password?
-                    </button>
-                  </div>
                 </LabelInputContainer>
 
                 <button

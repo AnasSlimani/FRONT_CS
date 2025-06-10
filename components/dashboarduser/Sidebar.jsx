@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
-import { LayoutDashboard, Calendar, MessageSquare, User, ChevronDown, LogOut, Settings, Menu, X } from "lucide-react"
+import { LayoutDashboard, Calendar, MessageSquare, User, ChevronDown, Menu, X } from "lucide-react"
 
 // Sample team data for the chat dropdown
 const teams = [
@@ -12,7 +12,7 @@ const teams = [
   { id: 3, name: "Billard Masters", image: "/images/logo.png" },
 ]
 
-const Sidebar = ({ activeTab, setActiveTab ,user}) => {
+const Sidebar = ({ activeTab, setActiveTab, user }) => {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -95,7 +95,7 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
                 <div className="relative w-24 h-24 mb-4">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 animate-pulse"></div>
                   <Image
-                    src={user.profilePicture}
+                    src={user?.profilePicture || "/placeholder.svg?height=96&width=96"}
                     alt="User Profile"
                     width={96}
                     height={96}
@@ -103,8 +103,8 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
                   />
                   <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white z-20"></div>
                 </div>
-                <h2 className="text-xl font-bold">John Doe</h2>
-                <p className="text-gray-400 text-sm">Premium Member</p>
+                <h2 className="text-xl font-bold">{user?.username || "User"}</h2>
+                <p className="text-gray-400 text-sm">{user?.role === "ADMIN" ? "Admin" : "Member"}</p>
               </div>
             </div>
 
@@ -137,13 +137,13 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
                   </button>
                 </motion.li>
 
-                {/* Chat with dropdown */}
+                {/* Chat - now navigates directly to chat */}
                 <motion.li custom={2} variants={itemVariants} initial="hidden" animate="visible" className="space-y-1">
                   <button
                     className={`flex items-center justify-between w-full p-3 rounded-lg transition-colors duration-200 ${
                       activeTab === "chat" ? "bg-teal-600 text-white" : "text-gray-300 hover:bg-gray-700"
                     }`}
-                    onClick={toggleChat}
+                    onClick={() => handleTabClick("chat")}
                   >
                     <div className="flex items-center">
                       <MessageSquare className="w-5 h-5 mr-3" />
@@ -153,43 +153,6 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
                       <ChevronDown className="w-4 h-4" />
                     </motion.div>
                   </button>
-
-                  {/* Teams dropdown */}
-                  <AnimatePresence>
-                    {isChatOpen && (
-                      <motion.div
-                        variants={dropdownVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="hidden"
-                        className="overflow-hidden ml-4"
-                      >
-                        <ul className="pl-2 border-l border-gray-700 space-y-1">
-                          {teams.map((team) => (
-                            <motion.li
-                              key={team.id}
-                              whileHover={{ x: 5 }}
-                              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                            >
-                              <button
-                                className="flex items-center w-full p-2 rounded-md text-gray-300 hover:bg-gray-700 transition-colors duration-200"
-                                onClick={() => handleTabClick("chat")}
-                              >
-                                <Image
-                                  src={team.image || "/placeholder.svg"}
-                                  alt={team.name}
-                                  width={20}
-                                  height={20}
-                                  className="rounded-full mr-2"
-                                />
-                                <span className="text-sm truncate">{team.name}</span>
-                              </button>
-                            </motion.li>
-                          ))}
-                        </ul>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </motion.li>
 
                 {/* Profile */}
@@ -214,4 +177,3 @@ const Sidebar = ({ activeTab, setActiveTab ,user}) => {
 }
 
 export default Sidebar
-

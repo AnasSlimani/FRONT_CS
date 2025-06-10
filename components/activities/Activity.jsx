@@ -20,6 +20,7 @@ const Activity = ({ activity }) => {
   const [isCheckingParticipation, setIsCheckingParticipation] = useState(false)
   const [isAlreadyParticipating, setIsAlreadyParticipating] = useState(false)
   const [participationTeam, setParticipationTeam] = useState(null)
+  const path = window.location.pathname;
 
   // State for controlling registration status and modals
   const isfull = activity.isTournamentFull
@@ -387,7 +388,7 @@ const Activity = ({ activity }) => {
       </div>
 
       {/* Login Modal */}
-      <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
+      <LoginModal isOpen={isLoginModalOpen} path={path} onClose={closeLoginModal} />
 
       {/* Already Participating Modal */}
       {renderParticipationModal()}

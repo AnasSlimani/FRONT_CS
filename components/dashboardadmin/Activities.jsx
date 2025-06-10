@@ -14,6 +14,7 @@ import {
   Clock,
   MoreHorizontal,
   Edit,
+  Sparkles,
   Trash2,
   Eye,
   AlertCircle,
@@ -322,11 +323,16 @@ export default function Activities() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+        <div className="relative w-20 h-20">
+          <div className="absolute top-0 left-0 w-full h-full border-4 border-teal-200 rounded-full animate-ping opacity-75"></div>
+          <div className="absolute top-0 left-0 w-full h-full border-4 border-t-teal-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <Sparkles className="h-8 w-8 text-teal-500" />
+          </div>
+        </div>
       </div>
     )
   }
-
   if (selectedActivityId) {
     return <ActivityDetails activityId={selectedActivityId} onBack={() => setSelectedActivityId(null)} />
   }
@@ -340,7 +346,7 @@ export default function Activities() {
         className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Activities</h1>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">Activities</h1>
           <p className="text-gray-600 mt-1">Manage your sports club activities</p>
         </div>
 

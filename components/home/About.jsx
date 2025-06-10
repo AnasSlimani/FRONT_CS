@@ -99,22 +99,22 @@ function ClubSportif3D() {
 const stats = [
   {
     value: "12+",
-    label: "Années d'expérience",
+    label: "Years of Experience",
     icon: <Calendar className="w-5 h-5 text-teal-500" />,
   },
   {
     value: "10",
-    label: "Disciplines sportives",
+    label: "Sports Disciplines",
     icon: <Award className="w-5 h-5 text-teal-500" />,
   },
   {
     value: "150+",
-    label: "Adhérents actifs",
+    label: "Active Members",
     icon: <Users className="w-5 h-5 text-teal-500" />,
   },
   {
     value: "25",
-    label: "Entraîneurs qualifiés",
+    label: "Qualified Coaches",
     icon: <Briefcase className="w-5 h-5 text-teal-500" />,
   },
 ]
@@ -171,7 +171,7 @@ export default function About() {
               viewport={{ once: true }}
               className="text-3xl md:text-4xl font-bold mb-4 font-[family-name:var(--font-oswald)] tracking-wide text-black"
             >
-              Notre Histoire et Notre Mission
+              Our Story and Mission
             </motion.h2>
 
             <motion.p
@@ -181,9 +181,7 @@ export default function About() {
               viewport={{ once: true }}
               className="text-gray-700 mb-6"
             >
-              Fondé en 2013, le Club Sportif Jaguars est né de la passion d'un groupe d'amis déterminés à créer un
-              espace sportif inclusif. Aujourd'hui, avec 12 disciplines, 850+ adhérents et 25 entraîneurs qualifiés,
-              nous promouvons l'excellence sportive et le développement personnel dans un environnement stimulant.
+              Founded in 2013, Club Sportif Jaguars was born from the passion of a group of determined friends who set out to create an inclusive sports space. Today, with 12 disciplines, 850+ members, and 25 qualified coaches, we promote sports excellence and personal development in a stimulating environment.
             </motion.p>
 
             {/* Stats Grid */}
@@ -218,7 +216,7 @@ export default function About() {
                 href="#joinus"
                 className="group inline-flex items-center gap-2 bg-black hover:bg-white hover:text-black text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-xl"
               >
-                <span>Rejoignez-nous</span>
+                <span>Join us</span>
                 <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </motion.div>
