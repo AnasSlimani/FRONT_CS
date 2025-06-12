@@ -136,6 +136,18 @@ const Sidebar = ({ activeTab, setActiveTab, user }) => {
                     <span>Activities</span>
                   </button>
                 </motion.li>
+                {/* Orders */}
+                <motion.li custom={1} variants={itemVariants} initial="hidden" animate="visible">
+                  <button
+                    className={`flex items-center w-full p-3 rounded-lg transition-colors duration-200 ${
+                      activeTab === "orders" ? "bg-teal-600 text-white" : "text-gray-300 hover:bg-gray-700"
+                    }`}
+                    onClick={() => handleTabClick("orders")}
+                  >
+                    <Calendar className="w-5 h-5 mr-3" />
+                    <span>Orders</span>
+                  </button>
+                </motion.li>
 
                 {/* Chat - now navigates directly to chat */}
                 <motion.li custom={2} variants={itemVariants} initial="hidden" animate="visible" className="space-y-1">

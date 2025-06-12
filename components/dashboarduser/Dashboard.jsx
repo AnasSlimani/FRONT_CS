@@ -368,9 +368,6 @@ export default function Dashboard() {
                 <Trophy className="mr-2 h-5 w-5 text-emerald-500" />
                 Recent Matches Played
               </h2>
-              <Link href="/matches" className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center">
-                View all <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
             </div>
 
             <div className="p-4">
@@ -450,9 +447,6 @@ export default function Dashboard() {
                 <Users className="mr-2 h-5 w-5 text-emerald-500" />
                 Your Teams
               </h2>
-              <Link href="/teams" className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center">
-                View all <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
             </div>
 
             <div className="p-4">
@@ -496,9 +490,6 @@ export default function Dashboard() {
                 <ShoppingBag className="mr-2 h-5 w-5 text-emerald-500" />
                 Recent Orders
               </h2>
-              <Link href="/orders" className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center">
-                View all <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
             </div>
 
             <div className="p-4">
