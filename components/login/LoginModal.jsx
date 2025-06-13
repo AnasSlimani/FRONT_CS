@@ -9,8 +9,9 @@ import { cn } from "@/lib/utils"
 import api from "@/app/api/axios"
 import { createPortal } from "react-dom"
 import { jwtDecode } from "jwt-decode"
+import ForgotPasswordModal from "./forgot-password-modal"
 
-const LoginModal = ({ isOpen, onClose , path }) => {
+const LoginModal = ({ isOpen, onClose, path }) => {
   const [loginForm, setLoginForm] = useState({
     email: "",
     password: "",
@@ -18,6 +19,7 @@ const LoginModal = ({ isOpen, onClose , path }) => {
   const [mounted, setMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
 
   // Reference for Google button
   const googleButtonRef = useRef(null)
@@ -105,29 +107,28 @@ const LoginModal = ({ isOpen, onClose , path }) => {
   }
 
   const handleSubmit = async (e) => {
-  e.preventDefault()
-  setError("")
-  setIsLoading(true)
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
 
-  try {
-    const response = await api.post("/users/login", loginForm, { public: true })
-    const token = response.data
-    console.log(token);
-    // Store token
-    localStorage.setItem("token", token)
-    document.cookie = `token=${token}; path=/`
-    
-    // Redirect based on role
-    onClose()
-    window.location.href = jwtDecode(token).role === "ADMIN" ? "/dashboardadmin" : path
-    
-  } catch (error) {
-    setError("Invalid email or password. Please try again.")
-    console.error("Login error:", error)
-  } finally {
-    setIsLoading(false)
+    try {
+      const response = await api.post("/users/login", loginForm, { public: true })
+      const token = response.data
+      console.log(token)
+      // Store token
+      localStorage.setItem("token", token)
+      document.cookie = `token=${token}; path=/`
+
+      // Redirect based on role
+      onClose()
+      window.location.href = jwtDecode(token).role === "ADMIN" ? "/dashboardadmin" : path
+    } catch (error) {
+      setError("Invalid email or password. Please try again.")
+      console.error("Login error:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
-}
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -142,36 +143,31 @@ const LoginModal = ({ isOpen, onClose , path }) => {
     try {
       setIsLoading(true)
       setError("")
-  
+
       const decodedToken = parseJwt(response.credential)
       const googleAuthData = {
         email: decodedToken.email,
         googleId: decodedToken.sub,
-        name: `${decodedToken.given_name} ${decodedToken.family_name}`
+        name: `${decodedToken.given_name} ${decodedToken.family_name}`,
       }
-  
-      const loginResponse = await api.post(
-        "users/google-login",
-        googleAuthData,
-        { public: true }
-      )
-  
+
+      const loginResponse = await api.post("users/google-login", googleAuthData, { public: true })
+
       const { token, role } = loginResponse.data
-      
+
       // Store token
       localStorage.setItem("token", token)
-      
+
       // Redirect based on role
       onClose()
       window.location.href = role === "ADMIN" ? "/dashboardadmin" : "/"
-      
     } catch (error) {
       console.error("Error with Google Sign-In:", error)
       setError(error.response?.data || "Failed to sign in with Google. Please try again.")
     } finally {
       setIsLoading(false)
     }
-  };
+  }
 
   // Helper function to decode JWT token
   const parseJwt = (token) => {
@@ -180,6 +176,14 @@ const LoginModal = ({ isOpen, onClose , path }) => {
     } catch (e) {
       return null
     }
+  }
+
+  const handleForgotPasswordClick = () => {
+    setShowForgotPassword(true)
+  }
+
+  const handleCloseForgotPassword = () => {
+    setShowForgotPassword(false)
   }
 
   // Animation variants
@@ -194,82 +198,96 @@ const LoginModal = ({ isOpen, onClose , path }) => {
   }
 
   const modalContent = (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-          initial="hidden"
-          animate="visible"
-          exit="hidden"
-          variants={backdropVariants}
-          onClick={onClose}
-        >
-          <motion.div className="w-full max-w-md" variants={modalVariants} onClick={(e) => e.stopPropagation()}>
-            <div className="shadow-input mx-auto w-full max-w-md rounded-2xl bg-white p-8 dark:bg-black relative">
-              {/* Close button */}
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
-              >
-                <X size={20} />
-              </button>
-
-              <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">Welcome to JAGUARS</h2>
-              <p className="mt-2 max-w-sm text-sm text-neutral-600 dark:text-neutral-300">
-                Sign in to your account to continue
-              </p>
-
-              {/* Error message */}
-              {error && (
-                <div className="mt-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg">{error}</div>
-              )}
-
-              <form className="my-8" onSubmit={handleSubmit}>
-                <LabelInputContainer className="mb-4">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    placeholder="projectmayhem@fc.com"
-                    type="email"
-                    name="email"
-                    value={loginForm.email}
-                    onChange={handleChange}
-                  />
-                </LabelInputContainer>
-                <LabelInputContainer className="mb-4">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    placeholder="••••••••"
-                    type="password"
-                    name="password"
-                    value={loginForm.password}
-                    onChange={handleChange}
-                  />
-                </LabelInputContainer>
-
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            variants={backdropVariants}
+            onClick={onClose}
+          >
+            <motion.div className="w-full max-w-md" variants={modalVariants} onClick={(e) => e.stopPropagation()}>
+              <div className="shadow-input mx-auto w-full max-w-md rounded-2xl bg-white p-8 dark:bg-black relative">
+                {/* Close button */}
                 <button
-                  className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] disabled:opacity-70"
-                  type="submit"
-                  disabled={isLoading}
+                  onClick={onClose}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
                 >
-                  {isLoading ? "Processing..." : "Log in →"}
-                  <BottomGradient />
+                  <X size={20} />
                 </button>
 
-                <div className="my-8 h-[1px] w-full bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-neutral-700" />
+                <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">Welcome to JAGUARS</h2>
+                <p className="mt-2 max-w-sm text-sm text-neutral-600 dark:text-neutral-300">
+                  Sign in to your account to continue
+                </p>
 
-                {/* Google Sign-In Button */}
-                <div className="flex flex-col items-center">
-                  <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">Or sign in with</p>
-                  <div ref={googleButtonRef} className="google-signin-button w-full flex justify-center"></div>
-                </div>
-              </form>
-            </div>
+                {/* Error message */}
+                {error && (
+                  <div className="mt-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg">{error}</div>
+                )}
+
+                <form className="my-8" onSubmit={handleSubmit}>
+                  <LabelInputContainer className="mb-4">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      placeholder="projectmayhem@fc.com"
+                      type="email"
+                      name="email"
+                      value={loginForm.email}
+                      onChange={handleChange}
+                    />
+                  </LabelInputContainer>
+                  <LabelInputContainer className="mb-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                      <button
+                        type="button"
+                        onClick={handleForgotPasswordClick}
+                        className="text-sm text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                    <Input
+                      id="password"
+                      placeholder="••••••••"
+                      type="password"
+                      name="password"
+                      value={loginForm.password}
+                      onChange={handleChange}
+                    />
+                  </LabelInputContainer>
+
+                  <button
+                    className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] disabled:opacity-70"
+                    type="submit"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Processing..." : "Log in →"}
+                    <BottomGradient />
+                  </button>
+
+                  <div className="my-8 h-[1px] w-full bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-neutral-700" />
+
+                  {/* Google Sign-In Button */}
+                  <div className="flex flex-col items-center">
+                    <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">Or sign in with</p>
+                    <div ref={googleButtonRef} className="google-signin-button w-full flex justify-center"></div>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal isOpen={showForgotPassword} onClose={handleCloseForgotPassword} />
+    </>
   )
 
   // Use createPortal to render the modal at the document body level
